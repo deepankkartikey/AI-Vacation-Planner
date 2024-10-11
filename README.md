@@ -18,6 +18,10 @@ This project is a mobile app created using React Native (Expo), integrated with 
 - **Google Gemini API:** For AI-driven itinerary creation.
 - **Firebase:** For authentication (SignUp/SignIn) and data storage (itineraries and search results).
 
+## Demo 
+
+[Link to Video Demo]()
+
 ## Getting Started
 
 Follow the steps below to run the project locally.
@@ -36,13 +40,13 @@ Follow the steps below to run the project locally.
 1. Clone the repository:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/deepankkartikey/AI-Vacation-Planner.git
    ```
 
 2. Navigate into the project directory:
 
    ```bash
-   cd <project-folder>
+   cd AI-Vacation-Planner
    ```
 
 3. Install the necessary dependencies:
