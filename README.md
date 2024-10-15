@@ -18,9 +18,9 @@ This project is a mobile app created using React Native (Expo), integrated with 
 - **Google Gemini API:** For AI-driven itinerary creation.
 - **Firebase:** For authentication (SignUp/SignIn) and data storage (itineraries and search results).
 
-## Demo 
+## Application Design 
 
-[Link to Video Demo]()
+[Checkout the Application Design Here](https://app.eraser.io/workspace/hBYDX9l1imG3v5oycMZR?origin=share)
 
 ## Getting Started
 
