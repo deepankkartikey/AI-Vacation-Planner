@@ -22,6 +22,8 @@ This project is a mobile app created using React Native (Expo), integrated with 
 
 [Checkout the Application Design Here](https://app.eraser.io/workspace/hBYDX9l1imG3v5oycMZR?origin=share)
 
+## App [Screenshots](./screenshots/)
+
 ## Getting Started
 
 Follow the steps below to run the project locally.
