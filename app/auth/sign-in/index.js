@@ -1,4 +1,4 @@
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, ToastAndroid } from 'react-native'
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, ToastAndroid, Alert, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import {Colors} from './../../../constants/Colors'
@@ -13,41 +13,51 @@ export default function SignIn() {
   const [email,setEmail]=useState();
   const [password,setPassword]=useState();
 
-  useEffect(()=>{
+  useEffect(() => {
     navigation.setOptions({
-      headerShown:false
-    })
-  },[])
+      headerShown: false
+    });
+    
+    console.log('Sign-in page loaded. Firebase auth:', auth ? '✅ Ready' : '❌ Not available');
+  }, []);
 
-  const onSignIn=()=>{
+  const showMessage = (message) => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.LONG);
+    } else {
+      Alert.alert('Error', message);
+    }
+  };
 
-    if(!email&&!password)
-    {
-      ToastAndroid.show("Please Enter Email & Passsword",ToastAndroid.LONG)
+  const onSignIn = async () => {
+    console.log('Sign in attempted with:', { email, password: password ? '***' : 'empty' });
+
+    if (!email || !password) {
+      showMessage("Please Enter Email & Password");
       return;
     }
 
-    signInWithEmailAndPassword(auth, email, password)
-  .then((userCredential) => {
-    // Signed in 
-    const user = userCredential.user;
-    router.replace('/mytrip')
-    console.log(user);
-    // ...
-  })
-  .catch((error) => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
-    console.log(errorMessage,error.code)
-    if(errorCode=='auth/invalid-credential')
-    {
-      ToastAndroid.show("Invalid credentials",ToastAndroid.LONG)
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log('Sign in successful:', user.uid);
+      router.replace('/mytrip');
+    } catch (error) {
+      console.log('Sign in error:', error.message, error.code);
+      
+      if (error.code === 'auth/invalid-credential') {
+        showMessage("Invalid email or password");
+      } else if (error.code === 'auth/user-not-found') {
+        showMessage("No account found with this email");
+      } else if (error.code === 'auth/wrong-password') {
+        showMessage("Incorrect password");
+      } else if (error.code === 'auth/too-many-requests') {
+        showMessage("Too many failed attempts. Please try again later");
+      } else {
+        showMessage("Login failed. Please try again");
+      }
     }
-  });
-
-  
-
-  }
+  };
 
   return (
     <View style={{
@@ -112,8 +122,27 @@ export default function SignIn() {
       }}>
           <Text style={{
             color:Colors.WHITE,
-            textAlign:'center'
+            textAlign:'center',
+            fontFamily: 'outfit'
           }}>Sign In</Text>
+      </TouchableOpacity>
+
+      {/* Debug Test Button - Remove in production */}
+      <TouchableOpacity onPress={() => {
+        console.log('Testing Firebase auth object:', auth);
+        console.log('Current user:', auth?.currentUser);
+        showMessage('Check console for Firebase debug info');
+      }} style={{
+        padding:10,
+        backgroundColor:Colors.GRAY,
+        borderRadius:15,
+        marginTop:10
+      }}>
+          <Text style={{
+            color:Colors.WHITE,
+            textAlign:'center',
+            fontSize: 12
+          }}>Debug Firebase (Check Console)</Text>
       </TouchableOpacity>
 
         {/* Create Account Button  */}

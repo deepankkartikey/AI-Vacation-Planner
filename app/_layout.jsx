@@ -4,6 +4,14 @@ import * as SplashScreen from 'expo-splash-screen';
 import { Stack } from "expo-router";
 import {CreateTripContext} from '../context/CreateTripContext'
 import { useState, useEffect } from "react";
+import { LogBox } from 'react-native';
+
+// Suppress specific warnings from third-party libraries
+LogBox.ignoreLogs([
+  'Warning: Day: Support for defaultProps will be removed',
+  'Warning: CalendarPicker: Support for defaultProps will be removed',
+  'Warning: DaysGridView: Support for defaultProps will be removed',
+]);
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();

@@ -1,42 +1,85 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps } from "firebase/app";
-import { initializeAuth, getReactNativePersistence, getAuth, connectAuthEmulator } from "firebase/auth";
+import { initializeAuth, getReactNativePersistence, getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Environment configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyBK45T2SDNvHMhhmDqqAcKgP_Gn56m-eb4",
-  authDomain: "ai-trip-planner-a205e.firebaseapp.com",
-  projectId: "ai-trip-planner-a205e",
-  storageBucket: "ai-trip-planner-a205e.appspot.com",
-  messagingSenderId: "860438279564",
-  appId: "1:860438279564:web:5d07002ff7b972ba1152a9",
-  measurementId: "G-QK5LHRSENP"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
+// Fallback configuration if environment variables are not loaded
+const fallbackConfig = {
+  apiKey: "AIzaSyCScbi6yBHawnFCUNlwDJS5CfsUiNFzl3s",
+  authDomain: "ai-vacation-planner-f40c0.firebaseapp.com",
+  projectId: "ai-vacation-planner-f40c0",
+  storageBucket: "ai-vacation-planner-f40c0.firebasestorage.app",
+  messagingSenderId: "352522558798",
+  appId: "1:352522558798:web:5df69ac381e2dd628c121f",
+  measurementId: "G-E29PXHL6NL"
+};
+
+// Use environment config if available, otherwise fallback
+const finalConfig = firebaseConfig.apiKey ? firebaseConfig : fallbackConfig;
+
+// Debug logging (only in development)
+if (__DEV__) {
+  console.log('� Firebase Debug:', {
+    hasApiKey: !!finalConfig.apiKey,
+    hasProjectId: !!finalConfig.projectId,
+    hasAppId: !!finalConfig.appId,
+    usingFallback: !firebaseConfig.apiKey
+  });
+}
+
 // Initialize Firebase app (only once)
-export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+let app;
+if (getApps().length === 0) {
+  try {
+    app = initializeApp(finalConfig);
+    if (__DEV__) {
+      console.log('✅ Firebase app initialized successfully');
+    }
+  } catch (error) {
+    console.error('❌ Firebase app initialization failed:', error);
+    throw error;
+  }
+} else {
+  app = getApps()[0];
+  if (__DEV__) {
+    console.log('📱 Using existing Firebase app instance');
+  }
+}
 
 // Initialize Auth with AsyncStorage persistence
 let auth;
 try {
-  // Always try to initialize with AsyncStorage first
   auth = initializeAuth(app, {
     persistence: getReactNativePersistence(AsyncStorage)
   });
-  console.log('✅ Firebase Auth initialized with AsyncStorage persistence');
+  if (__DEV__) {
+    console.log('✅ Firebase Auth initialized with AsyncStorage');
+  }
 } catch (error) {
   if (error.code === 'auth/already-initialized') {
-    // If already initialized, get the existing auth instance
     auth = getAuth(app);
-    console.log('✅ Firebase Auth instance retrieved (already initialized with default persistence)');
-    console.log('⚠️  Note: Auth was initialized elsewhere without AsyncStorage. Consider moving Firebase initialization earlier.');
+    if (__DEV__) {
+      console.log('📱 Using existing Firebase Auth instance');
+    }
   } else {
-    // Some other error occurred
     console.error('❌ Firebase Auth initialization error:', error);
     throw error;
   }
 }
 
-export { auth };
-export const db = getFirestore(app);
+// Initialize Firestore
+const db = getFirestore(app);
+
+export { auth, db, app };

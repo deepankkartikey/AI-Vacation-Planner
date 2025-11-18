@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native'
+import { View, Text, TouchableOpacity } from 'react-native'
 import React, { useContext, useEffect } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
@@ -21,19 +21,33 @@ export default function SearchPlace() {
     console.log(tripData);
   },[tripData]);
 
-  const handlePlaceSelect = (placeData) => {
-    console.log('Selected place:', placeData);
+  const handlePlaceSelect = (locationInfo) => {
+    console.log('🏃‍♂️ Place selection handler triggered');
+    console.log('📍 Selected place data:', locationInfo);
     
-    setTripData({
+    if (!locationInfo) {
+      console.error('❌ No location info received');
+      return;
+    }
+    
+    const updatedTripData = {
+      ...tripData,
       locationInfo: {
-        name: placeData.description,
-        coordinates: placeData.geometry?.location,
-        photoRef: placeData.photos?.[0]?.name,
-        url: placeData.website
+        name: locationInfo.name,
+        coordinates: locationInfo.coordinates,
+        photoRef: locationInfo.photoRef,
+        url: locationInfo.url
       }
-    });
-
-    router.push('/create-trip/select-traveler');
+    };
+    
+    console.log('💾 Updating trip data:', updatedTripData);
+    setTripData(updatedTripData);
+    
+    // Add a small delay to ensure state is updated
+    setTimeout(() => {
+      console.log('🚀 Navigating to select-traveler...');
+      router.push('/create-trip/select-traveler');
+    }, 100);
   };
 
   return (
@@ -64,8 +78,36 @@ export default function SearchPlace() {
       
       <NewGooglePlacesSearch 
         placeholder="Search for cities, countries, places..."
-        onPlaceSelect={handlePlaceSelect}
+        onPlaceSelected={handlePlaceSelect}
       />
+      
+      {/* Debug Section - Remove in production */}
+      <View style={{ marginTop: 30, padding: 20, backgroundColor: Colors.LIGHT_GRAY, borderRadius: 10 }}>
+        <Text style={{ fontFamily: 'outfit-medium', fontSize: 16, marginBottom: 10 }}>
+          Debug Info:
+        </Text>
+        <Text style={{ fontFamily: 'outfit', fontSize: 14, color: Colors.GRAY }}>
+          Trip Data: {JSON.stringify(tripData, null, 2)}
+        </Text>
+        
+        <TouchableOpacity 
+          style={{
+            backgroundColor: Colors.PRIMARY,
+            padding: 10,
+            borderRadius: 5,
+            marginTop: 10,
+            alignItems: 'center'
+          }}
+          onPress={() => {
+            console.log('🧪 Testing manual navigation...');
+            router.push('/create-trip/select-traveler');
+          }}
+        >
+          <Text style={{ color: Colors.WHITE, fontFamily: 'outfit' }}>
+            Test Navigation
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   )
 }

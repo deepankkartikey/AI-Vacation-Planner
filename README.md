@@ -58,7 +58,7 @@ Follow the steps below to run the project locally.
    EXPO_PUBLIC_GOOGLE_MAP_KEY=your_google_maps_api_key_here
    
    # Google Gemini AI API Key (required for AI itinerary generation)
-   GEMINI_MODEL_API_KEY=your_gemini_ai_api_key_here
+   EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_ai_api_key_here
    
    # Firebase Configuration (optional for authentication)
    FIREBASE_API_KEY=your_firebase_api_key_here
@@ -70,9 +70,72 @@ Follow the steps below to run the project locally.
    ```
 
 3. **Get API Keys:**
-   - **Google Maps:** [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-   - **Google Gemini AI:** [Google AI Studio](https://makersuite.google.com/app/apikey)
-   - **Firebase:** [Firebase Console](https://console.firebase.google.com/)
+
+   #### **🗺️ Google Maps API Key**
+   1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+   2. Create a new project or select an existing one
+   3. Enable the following APIs:
+      - **Maps JavaScript API**
+      - **Places API (New)** - Required for autocomplete
+      - **Geocoding API** - For coordinate conversion
+   4. Go to **APIs & Services → Credentials**
+   5. Click **"Create Credentials" → "API key"**
+   6. **Important:** Set up API key restrictions:
+      - Application restrictions: Choose "HTTP referrers" for web or "Android/iOS apps" for mobile
+      - API restrictions: Select only the APIs listed above
+   7. **Enable billing** on your project (required for Places API)
+   8. Copy your API key to `EXPO_PUBLIC_GOOGLE_MAP_KEY`
+
+   #### **🤖 Google Gemini AI API Key**
+   1. Go to [Google AI Studio](https://aistudio.google.com/)
+   2. Sign in with your Google account
+   3. Click **"Get API Key"** in the top menu
+   4. Click **"Create API Key"**
+   5. Choose **"Create API key in new project"** or select an existing project
+   6. Copy your API key to `EXPO_PUBLIC_GEMINI_API_KEY`
+   7. **Note:** Free tier includes generous limits for testing and development
+
+   #### **💰 API Costs & Limits**
+   
+   **Google Maps APIs:**
+   - **Free tier:** $200 credit per month (typically covers 28,000+ map loads or 17,000+ place searches)
+   - **Places API:** ~$0.032 per autocomplete session
+   - **Billing required** but you can set usage limits to avoid unexpected charges
+   
+   **Google Gemini AI:**
+   - **Free tier:** 15 requests per minute, 1,500 requests per day
+   - **Gemini 1.5 Flash:** Free up to rate limits, then pay-per-use
+   - Very generous for development and small-scale apps
+   
+   **Firebase:**
+   - **Authentication:** 50,000 monthly active users free
+   - **Firestore:** 50,000 reads, 20,000 writes, 20,000 deletes per day free
+   - **Hosting:** 10 GB bandwidth per month free
+
+   #### **🔥 Firebase Configuration (Optional but Recommended)**
+   1. Go to [Firebase Console](https://console.firebase.google.com/)
+   2. Click **"Add project"** or select existing project
+   3. Set up **Authentication**:
+      - Go to **Authentication → Sign-in method**
+      - Enable **"Email/Password"** provider
+   4. Set up **Firestore Database**:
+      - Go to **Firestore Database → Create database**
+      - Choose **"Start in test mode"** for development
+   5. Get your config:
+      - Go to **Project Settings → General → Your apps**
+      - Click **"Add app"** → **"Web app"**
+      - Copy the configuration values to your `.env` file
+   6. **Security Rules:** Update Firestore rules for production:
+      ```javascript
+      rules_version = '2';
+      service cloud.firestore {
+        match /databases/{database}/documents {
+          match /{document=**} {
+            allow read, write: if request.auth != null;
+          }
+        }
+      }
+      ```
 
 ### Development Commands
 
@@ -121,12 +184,40 @@ npm run lint             # Run ESLint code checking
 
 ### Troubleshooting
 
+#### **🔧 General Issues**
 If you encounter issues:
 
 - **File descriptor limit errors (macOS):** Restart your terminal and VS Code
 - **Node.js compatibility issues:** Use `npm run dev` instead of `expo start`
 - **Cache issues:** The dev command automatically clears cache, or manually run with `--clear` flag
 - **Simulator not opening:** Ensure Xcode is installed (iOS) or Android Studio (Android)
+
+#### **🔑 API Key Issues**
+
+**Google Places Autocomplete not working:**
+- Verify `EXPO_PUBLIC_GOOGLE_MAP_KEY` is set in `.env`
+- Ensure **Places API (New)** is enabled in Google Cloud Console
+- Check that **billing is enabled** on your Google Cloud project
+- Verify API key has proper restrictions (don't over-restrict during development)
+- Error message about billing? Enable billing at https://console.cloud.google.com/billing
+
+**Trip generation failing:**
+- Verify `EXPO_PUBLIC_GEMINI_API_KEY` is set in `.env`
+- Check console for quota exceeded errors
+- Gemini free tier has rate limits - wait a few minutes if exceeded
+- Ensure your Gemini API key is from Google AI Studio, not Google Cloud
+
+**Authentication issues:**
+- Verify all Firebase config variables are set in `.env`
+- Check Firebase console for project setup completion
+- Ensure Authentication and Firestore are enabled in Firebase console
+- For iOS/Android, add your app's bundle ID to Firebase project settings
+
+**Environment variables not loading:**
+- All client-side variables must start with `EXPO_PUBLIC_`
+- Restart development server after changing `.env` file
+- Use `console.log(process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY)` to debug
+- Ensure `.env` file is in the root directory (same level as `package.json`)
 
 ## Disclaimer
 
