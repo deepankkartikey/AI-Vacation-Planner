@@ -1,3 +1,4 @@
+import 'react-native-get-random-values'; // Must be imported before any crypto operations
 import { useFonts } from "expo-font";
 import * as SplashScreen from 'expo-splash-screen';
 import { Stack } from "expo-router";
