@@ -1,0 +1,39 @@
+// Copy these Firestore Security Rules to your Firebase Console
+// Go to Firebase Console > Firestore Database > Rules and replace the existing rules with these:
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow authenticated users to read and write their own trip data
+    match /UserTrips/{document} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Allow authenticated users to read and write their own user profile data
+    match /Users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Deny all other access by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+/* 
+INSTRUCTIONS:
+1. Go to https://console.firebase.google.com/
+2. Select your project: ai-vacation-planner-f40c0
+3. Click on "Firestore Database" in the left sidebar
+4. Click on the "Rules" tab
+5. Replace the existing rules with the rules above
+6. Click "Publish" to apply the new rules
+
+These rules will:
+- Allow authenticated users to create, read, update, and delete their own trips
+- Ensure users can only access their own data (based on userId field)
+- Deny access to unauthenticated users
+- Deny access to other users' data
+*/
