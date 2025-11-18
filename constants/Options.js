@@ -51,4 +51,48 @@ export const SelectBudgetOptions=[
     },
 ]
 
-export const AI_PROMPT='Generate Travel Plan for Location : {location}, for {totalDays} Days and {totalNight} Night for {traveler} with a {budget} budget with a Flight details , Flight Price with Booking url, Hotels options list with HotelName, Hotel address, Price, hotel image url, geo coordinates, rating, descriptions and  suggest itinerary with placeName, Place Details, Place Image Url, Geo Coordinates, ticket Pricing, Time t travel each of the location for {totalDays} days and {totalNight} night with each day plan with best time to visit in JSON format.'
+export const AI_PROMPT=`Generate a comprehensive travel plan for Location: {location}, for {totalDays} Days and {totalNight} Night for {traveler} with a {budget} budget. 
+
+Please provide the response in valid JSON format with the following structure:
+
+{
+  "travelPlan": {
+    "location": "{location}",
+    "duration": "{totalDays} Days & {totalNight} Nights",
+    "travelers": "{traveler}",
+    "budget": "{budget}",
+    "flight": {
+      "details": "Flight information",
+      "price": "Estimated price",
+      "bookingUrl": "https://www.google.com/flights"
+    },
+    "hotels": [
+      {
+        "hotelName": "Hotel Name",
+        "address": "Hotel Address",
+        "price": "Price per night",
+        "imageUrl": "https://example.com/hotel-image.jpg",
+        "geoCoordinates": [latitude, longitude],
+        "rating": 4.5,
+        "description": "Hotel description"
+      }
+    ],
+    "itinerary": {
+      "day1": {
+        "bestTime": "Morning/Afternoon/Evening",
+        "plan": [
+          {
+            "placeName": "Place Name",
+            "placeDetails": "Description of the place and activities",
+            "placeImageUrl": "https://example.com/place-image.jpg",
+            "geoCoordinates": [latitude, longitude],
+            "ticketPricing": "Free or ticket price",
+            "timeToTravel": "Duration"
+          }
+        ]
+      }
+    }
+  }
+}
+
+Make sure to provide actual recommendations for {location} with realistic prices and genuine place suggestions. Return ONLY valid JSON, no additional text.`

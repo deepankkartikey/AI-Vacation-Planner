@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, ToastAndroid } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ToastAndroid, Alert, Platform } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../../constants/Colors';
@@ -15,39 +15,59 @@ export default function SignUp() {
 
 
 
-  useEffect(()=>{
+  useEffect(() => {
     navigation.setOptions({
-      headerShown:false
+      headerShown: false
+    });
+    
+    console.log('Sign-up page loaded. Firebase auth:', auth ? '✅ Ready' : '❌ Not available');
+  }, []);
+
+
+  const showMessage = (message) => {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.LONG);
+    } else {
+      Alert.alert('Error', message);
+    }
+  };
+
+  const OnCreateAccount = async () => {
+    console.log('Create account attempted with:', { 
+      fullName, 
+      email, 
+      password: password ? '***' : 'empty' 
     });
 
-   
-  },[]);
-
-
-  const OnCreateAccount=()=>{
-
-    if(!email&&!password&&!fullName)
-    {
-      ToastAndroid.show('Please enter all details',ToastAndroid.LONG);
-      return ;
+    if (!email || !password || !fullName) {
+      showMessage('Please enter all details');
+      return;
     }
 
-    
-    createUserWithEmailAndPassword(auth, email, password)
-  .then((userCredential) => {
-    // Signed up 
-    const user = userCredential.user;
-    console.log(user);
-    router.replace('/mytrip')
-    // ...
-  })
-  .catch((error) => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
-     console.log("--",errorMessage,errorCode);
-    // ..
-  });
-  }
+    if (password.length < 6) {
+      showMessage('Password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log('Account created successfully:', user.uid);
+      router.replace('/mytrip');
+    } catch (error) {
+      console.log('Sign up error:', error.message, error.code);
+      
+      if (error.code === 'auth/email-already-in-use') {
+        showMessage("Email is already registered. Please use a different email or sign in");
+      } else if (error.code === 'auth/invalid-email') {
+        showMessage("Please enter a valid email address");
+      } else if (error.code === 'auth/weak-password') {
+        showMessage("Password is too weak. Please use at least 6 characters");
+      } else {
+        showMessage("Account creation failed. Please try again");
+      }
+    }
+  };
 
   return (
     <View
