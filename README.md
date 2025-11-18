@@ -13,10 +13,21 @@ This project is a mobile app created using React Native (Expo), integrated with 
 
 ## Technologies Used
 
-- **React Native (Expo):** For building the mobile app.
+- **React Native (Expo SDK 51):** For building the mobile app with modern features.
 - **Google Places API:** For destination autocomplete functionality.
-- **Google Gemini API:** For AI-driven itinerary creation.
-- **Firebase:** For authentication (SignUp/SignIn) and data storage (itineraries and search results).
+- **Google Gemini AI:** For AI-driven itinerary creation.
+- **Firebase v11:** For authentication (SignUp/SignIn) with AsyncStorage persistence and Firestore data storage.
+- **TypeScript:** For type safety and better development experience.
+- **Expo Router:** For navigation and routing.
+
+## Technical Highlights
+
+- ✅ **Zero Security Vulnerabilities:** All dependencies updated and secure
+- ✅ **Node.js v25 Compatible:** Works with latest Node.js versions
+- ✅ **Firebase AsyncStorage Integration:** Persistent authentication across app sessions
+- ✅ **Optimized Metro Bundler:** Configured for better performance and reduced file watching
+- ✅ **Error Handling:** Robust error handling for API calls and data parsing
+- ✅ **Development Environment:** Streamlined setup with automated cache clearing
 
 ## Application Design 
 
