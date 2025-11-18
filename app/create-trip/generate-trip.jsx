@@ -54,7 +54,7 @@ export default function GenerateTrip() {
                                         temperature: 0.9,
                                         topK: 1,
                                         topP: 1,
-                                        maxOutputTokens: 2048,
+                                        maxOutputTokens: 8192,
                                     }
                                 })
                             });
@@ -62,9 +62,42 @@ export default function GenerateTrip() {
                             if (response.ok) {
                                 const data = await response.json();
                                 console.log(`✅ Successfully used model: ${modelName}`);
+                                console.log('📊 API response structure:', JSON.stringify(data, null, 2));
+                                
+                                // Check if response was truncated due to token limit
+                                if (data.candidates && data.candidates[0] && data.candidates[0].finishReason === "MAX_TOKENS") {
+                                    console.warn(`⚠️ Response truncated due to token limit for ${modelName}. Will try to parse partial response...`);
+                                    // Don't continue here - let's try to work with the partial response
+                                }
+                                
+                                // Handle different response structures
+                                let responseText = '';
+                                if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+                                    responseText = data.candidates[0].content.parts[0].text;
+                                } else if (data.candidates && data.candidates[0] && data.candidates[0].content && typeof data.candidates[0].content === 'string') {
+                                    responseText = data.candidates[0].content;
+                                } else if (data.text) {
+                                    responseText = data.text;
+                                } else if (data.response) {
+                                    responseText = data.response;
+                                } else {
+                                    console.error('❌ Unexpected response structure:', data);
+                                    lastError = new Error(`Unexpected API response structure from ${modelName}`);
+                                    continue; // Try next model
+                                }
+                                
+                                console.log('📝 Response text length:', responseText.length);
+                                
+                                // If response is too short, try next model
+                                if (responseText.length < 500) {
+                                    console.warn(`⚠️ Response too short (${responseText.length} chars). Trying next model...`);
+                                    lastError = new Error(`Response too short for ${modelName}`);
+                                    continue;
+                                }
+                                
                                 return {
                                     response: {
-                                        text: () => data.candidates[0].content.parts[0].text
+                                        text: () => responseText
                                     }
                                 };
                             } else {
@@ -113,7 +146,7 @@ export default function GenerateTrip() {
             
             const responseText = result.response.text();
             console.log('📄 Raw response length:', responseText.length);
-            console.log('📄 Raw response preview:', responseText.substring(0, 200) + '...');
+            console.log('📄 Raw response preview:', responseText.substring(0, 300) + '...');
             
             // Clean the response text more thoroughly
             let cleanText = responseText.trim();
@@ -124,29 +157,156 @@ export default function GenerateTrip() {
             // Remove any leading/trailing whitespace and newlines
             cleanText = cleanText.trim();
             
-            // Find JSON content if it's wrapped in other text
+            // Better JSON extraction - find the complete JSON object
             const jsonStart = cleanText.indexOf('{');
-            const jsonEnd = cleanText.lastIndexOf('}');
-            
-            if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
-                cleanText = cleanText.substring(jsonStart, jsonEnd + 1);
+            if (jsonStart !== -1) {
+                // Extract from the first { to the end, then we'll validate it's complete JSON
+                let jsonCandidate = cleanText.substring(jsonStart);
+                
+                // Try to find the matching closing brace by counting braces
+                let braceCount = 0;
+                let jsonEnd = -1;
+                
+                for (let i = 0; i < jsonCandidate.length; i++) {
+                    if (jsonCandidate[i] === '{') {
+                        braceCount++;
+                    } else if (jsonCandidate[i] === '}') {
+                        braceCount--;
+                        if (braceCount === 0) {
+                            jsonEnd = i;
+                            break;
+                        }
+                    }
+                }
+                
+                if (jsonEnd !== -1) {
+                    cleanText = jsonCandidate.substring(0, jsonEnd + 1);
+                } else {
+                    // Fallback - use the whole text from first { onwards
+                    cleanText = jsonCandidate;
+                }
             }
             
-            console.log('🧹 Cleaned response preview:', cleanText.substring(0, 200) + '...');
+            console.log('🧹 Cleaned response length:', cleanText.length);
+            console.log('🧹 Cleaned response preview:', cleanText.substring(0, 300) + '...');
+            console.log('🧹 Cleaned response end:', '...' + cleanText.substring(cleanText.length - 100));
+            
+            // Validate JSON before parsing
+            if (!cleanText.startsWith('{')) {
+                console.error('❌ Invalid JSON format - does not start with brace');
+                throw new Error('Invalid JSON format received from AI');
+            }
+            
+            // If JSON doesn't end with }, try to fix truncated JSON
+            if (!cleanText.endsWith('}')) {
+                console.warn('⚠️ JSON appears truncated. Attempting to fix...');
+                console.log('🔍 Original length:', cleanText.length);
+                console.log('🔍 Last 200 characters:', cleanText.substring(cleanText.length - 200));
+                
+                // Try to close incomplete JSON structures
+                let fixedText = cleanText;
+                
+                // Count open braces and brackets to see what's missing
+                let braceCount = 0;
+                let bracketCount = 0;
+                let inString = false;
+                let escapeNext = false;
+                
+                for (let i = 0; i < fixedText.length; i++) {
+                    const char = fixedText[i];
+                    
+                    if (escapeNext) {
+                        escapeNext = false;
+                        continue;
+                    }
+                    
+                    if (char === '\\') {
+                        escapeNext = true;
+                        continue;
+                    }
+                    
+                    if (char === '"' && !escapeNext) {
+                        inString = !inString;
+                        continue;
+                    }
+                    
+                    if (!inString) {
+                        if (char === '{') braceCount++;
+                        else if (char === '}') braceCount--;
+                        else if (char === '[') bracketCount++;
+                        else if (char === ']') bracketCount--;
+                    }
+                }
+                
+                // If we're in a string, close it
+                if (inString) {
+                    fixedText += '"';
+                }
+                
+                // Close any open brackets
+                for (let i = 0; i < bracketCount; i++) {
+                    fixedText += ']';
+                }
+                
+                // Close any open braces
+                for (let i = 0; i < braceCount; i++) {
+                    fixedText += '}';
+                }
+                
+                cleanText = fixedText;
+                console.log('🔧 Fixed JSON length:', cleanText.length);
+                console.log('🔧 Fixed JSON ends with:', cleanText.substring(cleanText.length - 10));
+            }
+            
+            // Additional validation - try to parse first to catch syntax errors
+            try {
+                JSON.parse(cleanText);
+            } catch (parseError) {
+                console.error('❌ JSON syntax error:', parseError.message);
+                console.log('🔍 Problematic JSON length:', cleanText.length);
+                console.log('🔍 JSON starts with:', cleanText.substring(0, 100));
+                console.log('🔍 JSON ends with:', cleanText.substring(cleanText.length - 100));
+                throw new Error(`JSON parsing failed: ${parseError.message}`);
+            }
             
             const tripResp = JSON.parse(cleanText);
             console.log('✅ Trip data parsed successfully');
             
-            const docId = (Date.now()).toString();
-            const result_ = await setDoc(doc(db, "UserTrips", docId), {
-                userEmail: user.email,
-                tripPlan: tripResp,// AI Result 
-                tripData: JSON.stringify(tripData),//User Selection Data
-                docId: docId
+            // Debug user authentication status
+            console.log('👤 Current user status:', {
+                uid: user?.uid,
+                email: user?.email,
+                isAuthenticated: !!user
             });
             
-            console.log('✅ Trip saved to Firebase successfully');
-            router.push('(tabs)/mytrip');
+            if (!user) {
+                throw new Error('User not authenticated. Please sign in again.');
+            }
+            
+            const docId = (Date.now()).toString();
+            console.log('💾 Attempting to save trip with docId:', docId);
+            
+            try {
+                const result_ = await setDoc(doc(db, "UserTrips", docId), {
+                    userEmail: user.email,
+                    tripPlan: tripResp,// AI Result 
+                    tripData: JSON.stringify(tripData),//User Selection Data
+                    docId: docId,
+                    createdAt: new Date().toISOString(),
+                    userId: user.uid
+                });
+                
+                console.log('✅ Trip saved to Firebase successfully');
+                router.push('(tabs)/mytrip');
+            } catch (firestoreError) {
+                console.error('❌ Firestore save error:', firestoreError);
+                console.error('❌ Error code:', firestoreError.code);
+                console.error('❌ Error message:', firestoreError.message);
+                
+                // Try alternative approach - let user know about the error but still show success
+                alert('Trip generated successfully! However, there was an issue saving to your account. Please try again or contact support.');
+                router.push('(tabs)/mytrip');
+            }
             
         } catch (error) {
             console.error('❌ Error generating trip:', error);
