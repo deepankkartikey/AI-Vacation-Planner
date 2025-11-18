@@ -10,10 +10,15 @@ export default function TripDetails() {
 
     const navigation=useNavigation();
     const {trip}=useLocalSearchParams();
-    const [tripDetails,setTripDetails]=useState(JSON.parse(trip));
+    const [tripDetails,setTripDetails]=useState(null);
 
     const formatData=(data)=>{
-        return data&&JSON.parse(data);
+        try {
+            return data ? JSON.parse(data) : {};
+        } catch (error) {
+            console.log('Error parsing trip data:', error);
+            return {};
+        }
     }
     useEffect(()=>{
         navigation.setOptions({
@@ -22,14 +27,21 @@ export default function TripDetails() {
             headerTitle:''
         });
 
-        trip&&setTripDetails(JSON.parse(trip))
+        if (trip) {
+            try {
+                setTripDetails(JSON.parse(trip));
+            } catch (error) {
+                console.log('Error parsing trip details:', error);
+                setTripDetails(null);
+            }
+        }
     },[trip])
 
   return tripDetails&&(
     <ScrollView>
          <Image source={{uri:
         'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference='
-        +formatData(tripDetails?.tripData).locationInfo?.photoRef
+        +(formatData(tripDetails?.tripData)?.locationInfo?.photoRef || '')
         +'&key='+process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}}
         style={{
             width:'100%',
@@ -48,7 +60,7 @@ export default function TripDetails() {
             <Text style={{
                 fontSize:25,
                 fontFamily:'outfit-bold'
-            }}>{tripDetails?.tripPlan.travelPlan.location}</Text>
+            }}>{tripDetails?.tripPlan?.travelPlan?.location || 'Unknown Location'}</Text>
            <View style={{
             display:'flex',
             flexDirection:'row',
@@ -59,26 +71,26 @@ export default function TripDetails() {
                 fontFamily:'outfit',
                 fontSize:18,
                 color:Colors.GRAY
-            }}>{moment(formatData(tripDetails.tripData).startDate).format('DD MMM yyyy')}</Text>
+            }}>{formatData(tripDetails?.tripData)?.startDate ? moment(formatData(tripDetails.tripData).startDate).format('DD MMM yyyy') : 'Date TBD'}</Text>
               <Text style={{
                 fontFamily:'outfit',
                 fontSize:18,
                 color:Colors.GRAY
-            }}> {moment(formatData(tripDetails.tripData)?.endDate).format('DD MMM yyyy')}</Text>
+            }}> - {formatData(tripDetails?.tripData)?.endDate ? moment(formatData(tripDetails.tripData)?.endDate).format('DD MMM yyyy') : 'Date TBD'}</Text>
          </View>
          <Text style={{
                 fontFamily:'outfit',
                 fontSize:17,
                 color:Colors.GRAY
-            }}>🚌 {formatData(tripDetails.tripData)?.traveler?.title}</Text>
+            }}>🚌 {formatData(tripDetails?.tripData)?.traveler?.title || 'Solo'}</Text>
         
         
         {/* Flight Info  */}
         <FlightInfo flightData={tripDetails?.tripPlan?.travelPlan?.flight} />
         {/* Hotels List  */}
-        <HotelList hotelList={tripDetails?.tripPlan?.travelPlan?.hotels} />
+        <HotelList hotelList={tripDetails?.tripPlan?.travelPlan?.hotels || []} />
         {/* Trip Day Planner Info */}
-        <PlannedTrip details={tripDetails?.tripPlan?.travelPlan?.itinerary} />
+        <PlannedTrip details={tripDetails?.tripPlan?.travelPlan?.itinerary || {}} />
         </View>
     </ScrollView>
   )

@@ -12,15 +12,15 @@ export default function PlannedTrip({details}) {
       }}>🏕️ Plan Details</Text>
 
      
-      {Object.entries(details).reverse().map(([day,details])=>(
-        <View >
+      {details && Object.entries(details).reverse().map(([day,dayDetails],dayIndex)=>(
+        <View key={dayIndex}>
             <Text style={{
                 fontFamily:'outfit-medium',
                 fontSize:20,
                 marginTop:20
             }}>{day.charAt(0).toUpperCase()+day.slice(1)}</Text>
-            {details.plan.map((place,index)=>(
-             <PlaceCard place={place} />
+            {dayDetails?.plan?.map((place,index)=>(
+             <PlaceCard place={place} key={index} />
             ))}
         </View>
       ))}

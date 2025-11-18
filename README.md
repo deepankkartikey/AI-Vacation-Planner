@@ -80,14 +80,15 @@ Follow the steps below to run the project locally.
 ```bash
 npm run dev
 ```
-Starts the development server with the latest Expo CLI, clears cache, and ensures Node.js v25+ compatibility.
+Starts the web development server with the latest Expo CLI, clears cache, and ensures optimal development experience.
 
 #### **📱 Platform-Specific Commands**
 ```bash
-npm run ios          # Start and open iOS simulator
-npm run android      # Start and open Android emulator  
-npm run web          # Start web development server
-npm start            # Original start command
+npm run dev-native     # Start native development server (iOS/Android)
+npm run ios            # Start and open iOS simulator with cache clearing
+npm run android        # Start and open Android emulator with cache clearing
+npm run web            # Start web development server with cache clearing
+npm start              # Original start command
 ```
 
 #### **🛠️ Utility Commands**
@@ -106,12 +107,13 @@ npm run lint             # Run ESLint code checking
    ```
 
 2. **Choose your testing method:**
-   - **iOS Simulator:** Press `i` in the terminal or run `npm run ios`
-   - **Android Emulator:** Press `a` in the terminal or run `npm run android`  
-   - **Web Browser:** Press `w` in the terminal or run `npm run web`
-   - **Physical Device:** Scan the QR code with Expo Go app
+   - **Web Browser (Default):** Automatically opens at http://localhost:8082
+   - **iOS Simulator:** Run `npm run ios` or press `i` in the terminal
+   - **Android Emulator:** Run `npm run android` or press `a` in the terminal
+   - **Physical Device:** Run `npm run dev-native` and scan QR code with Expo Go app
 
 3. **Development Tips:**
+   - Web version provides fastest development cycle and debugging
    - Press `r` to reload the app
    - Press `m` to open developer menu
    - Press `j` to open debugger
