@@ -75,12 +75,22 @@ export default function SelectDates() {
     allowRangeSelection={true}
     minDate={new Date()}
     maxRangeDuration={5}
+    width={350}
+    height={350}
     selectedRangeStyle={{
         backgroundColor:Colors.PRIMARY
     }}
     selectedDayTextStyle={{
         color:Colors.WHITE
     }}
+    textStyle={{
+        fontFamily: 'outfit',
+        color: Colors.PRIMARY
+    }}
+    todayBackgroundColor={Colors.LIGHT_BLUE}
+    selectedDayColor={Colors.PRIMARY}
+    dayShape='circle'
+    customDatesStyles={[]}
     />
 
     </View>
