@@ -28,42 +28,60 @@ export default function GenerateTrip() {
                 throw new Error('API key not found');
             }
             
-            console.log('� Using direct Gemini API call...');
+            console.log('🤖 Using direct Gemini API call...');
+            
             return {
                 sendMessage: async (prompt) => {
-                    const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            contents: [{
-                                parts: [{
-                                    text: prompt
-                                }]
-                            }],
-                            generationConfig: {
-                                temperature: 0.9,
-                                topK: 1,
-                                topP: 1,
-                                maxOutputTokens: 2048,
-                            }
-                        })
-                    });
+                    // Use only v1 API with Gemini 2.5 models
+                    const models = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+                    let lastError = null;
                     
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        console.error('API Error:', response.status, errorText);
-                        throw new Error(`API Error: ${response.status} - ${errorText}`);
+                    for (const modelName of models) {
+                        try {
+                            console.log(`🔄 Trying v1 API with model: ${modelName}`);
+                            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    contents: [{
+                                        parts: [{
+                                            text: prompt
+                                        }]
+                                    }],
+                                    generationConfig: {
+                                        temperature: 0.9,
+                                        topK: 1,
+                                        topP: 1,
+                                        maxOutputTokens: 2048,
+                                    }
+                                })
+                            });
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log(`✅ Successfully used model: ${modelName}`);
+                                return {
+                                    response: {
+                                        text: () => data.candidates[0].content.parts[0].text
+                                    }
+                                };
+                            } else {
+                                const errorText = await response.text();
+                                lastError = new Error(`API Error with ${modelName}: ${response.status} - ${errorText}`);
+                                console.warn(`❌ Model ${modelName} failed:`, lastError.message);
+                                continue; // Try next model
+                            }
+                        } catch (modelError) {
+                            lastError = modelError;
+                            console.warn(`❌ Model ${modelName} failed:`, modelError.message);
+                            continue; // Try next model
+                        }
                     }
                     
-                    const data = await response.json();
-                    
-                    return {
-                        response: {
-                            text: () => data.candidates[0].content.parts[0].text
-                        }
-                    };
+                    // If we get here, all models failed
+                    throw lastError || new Error('All Gemini models failed');
                 }
             };
         } catch (error) {
