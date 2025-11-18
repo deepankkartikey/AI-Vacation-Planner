@@ -5,7 +5,17 @@ import { Colors } from '../../constants/Colors'
 import UserTripCard from './UserTripCard'
 import { useRouter } from 'expo-router'
 export default function UserTripList({userTrips}) {
-    const LatestTrip=JSON.parse(userTrips[0].tripData)
+    // Safely parse the trip data with error handling
+    let LatestTrip = {};
+    try {
+        if (userTrips && userTrips[0] && userTrips[0].tripData) {
+            LatestTrip = JSON.parse(userTrips[0].tripData);
+        }
+    } catch (error) {
+        console.log('Error parsing trip data:', error);
+        LatestTrip = {};
+    }
+    
     const router=useRouter();
    
   return userTrips&&(
@@ -13,7 +23,7 @@ export default function UserTripList({userTrips}) {
       <View style={{
         marginTop:20
       }}>
-       {LatestTrip.locationInfo?.photoRef? 
+       {LatestTrip?.locationInfo?.photoRef? 
        <Image source={{uri:
         'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference='
         +LatestTrip.locationInfo?.photoRef
@@ -39,7 +49,7 @@ export default function UserTripList({userTrips}) {
             <Text style={{
                 fontFamily:'outfit-medium',
                 fontSize:24
-            }}>{userTrips[0]?.tripPlan?.travelPlan?.location}</Text>
+            }}>{userTrips[0]?.tripPlan?.travelPlan?.location || 'Unknown Location'}</Text>
             <View style={{
                 display:'flex',
                 flexDirection:'row',
@@ -49,13 +59,13 @@ export default function UserTripList({userTrips}) {
                 fontFamily:'outfit',
                 fontSize:17,
                 color:Colors.GRAY
-            }}>{moment(LatestTrip.startDate).format('DD MMM yyyy')}</Text>
+            }}>{LatestTrip?.startDate ? moment(LatestTrip.startDate).format('DD MMM yyyy') : 'Date TBD'}</Text>
 
             <Text style={{
                 fontFamily:'outfit',
                 fontSize:17,
                 color:Colors.GRAY
-            }}>🚌 {LatestTrip.traveler.title}</Text>
+            }}>🚌 {LatestTrip?.traveler?.title || 'Solo'}</Text>
             </View>
             <TouchableOpacity 
             onPress={()=>router.push({pathname:'/trip-details',params:{

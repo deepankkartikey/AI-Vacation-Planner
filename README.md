@@ -30,40 +30,90 @@ Follow the steps below to run the project locally.
 
 ### Prerequisites
 
-- **Node.js** and **npm** should be installed on your machine.
-- You should have **Expo CLI** installed globally. You can install it by running:
+- **Node.js** (v18 or higher) and **npm** should be installed on your machine.
+- **iOS Simulator** (macOS only) or **Android Studio** for mobile testing.
+- **Expo Go** app on your physical device (optional).
 
-  ```bash
-  npm install -g expo-cli
-  ```
+### Environment Setup
 
-### Installation
-
-1. Clone the repository:
-
+1. **Copy the environment template:**
    ```bash
-   git clone https://github.com/deepankkartikey/AI-Vacation-Planner.git
+   cp .env.example .env
    ```
 
-2. Navigate into the project directory:
-
+2. **Configure your API keys in `.env`:**
    ```bash
-   cd AI-Vacation-Planner
+   # Google Maps API Key (required for location search)
+   EXPO_PUBLIC_GOOGLE_MAP_KEY=your_google_maps_api_key_here
+   
+   # Google Gemini AI API Key (required for AI itinerary generation)
+   GEMINI_MODEL_API_KEY=your_gemini_ai_api_key_here
+   
+   # Firebase Configuration (optional for authentication)
+   FIREBASE_API_KEY=your_firebase_api_key_here
+   FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+   FIREBASE_PROJECT_ID=your_project_id
+   FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+   FIREBASE_MESSAGING_SENDER_ID=123456789012
+   FIREBASE_APP_ID=1:123456789012:web:abcdef123456
    ```
 
-3. Install the necessary dependencies:
+3. **Get API Keys:**
+   - **Google Maps:** [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   - **Google Gemini AI:** [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - **Firebase:** [Firebase Console](https://console.firebase.google.com/)
 
+### Development Commands
+
+#### **🚀 Primary Development Command (Recommended)**
+```bash
+npm run dev
+```
+Starts the development server with the latest Expo CLI, clears cache, and ensures Node.js v25+ compatibility.
+
+#### **📱 Platform-Specific Commands**
+```bash
+npm run ios          # Start and open iOS simulator
+npm run android      # Start and open Android emulator  
+npm run web          # Start web development server
+npm start            # Original start command
+```
+
+#### **🛠️ Utility Commands**
+```bash
+npm run install-clean    # Clean install dependencies
+npm run reset-project    # Reset project to initial state
+npm test                 # Run tests with Jest
+npm run lint             # Run ESLint code checking
+```
+
+### Running the App
+
+1. **Start the development server:**
    ```bash
-   npm install
+   npm run dev
    ```
 
-4. Start the Expo development server:
+2. **Choose your testing method:**
+   - **iOS Simulator:** Press `i` in the terminal or run `npm run ios`
+   - **Android Emulator:** Press `a` in the terminal or run `npm run android`  
+   - **Web Browser:** Press `w` in the terminal or run `npm run web`
+   - **Physical Device:** Scan the QR code with Expo Go app
 
-   ```bash
-   npm start -- --reset-cache
-   ```
+3. **Development Tips:**
+   - Press `r` to reload the app
+   - Press `m` to open developer menu
+   - Press `j` to open debugger
+   - Press `?` to see all available commands
 
-   This command will launch the Expo app, and you can either use an emulator or your physical device to run the app.
+### Troubleshooting
+
+If you encounter issues:
+
+- **File descriptor limit errors (macOS):** Restart your terminal and VS Code
+- **Node.js compatibility issues:** Use `npm run dev` instead of `expo start`
+- **Cache issues:** The dev command automatically clears cache, or manually run with `--clear` flag
+- **Simulator not opening:** Ensure Xcode is installed (iOS) or Android Studio (Android)
 
 ## Disclaimer
 

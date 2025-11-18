@@ -5,9 +5,17 @@ import { Colors } from '../../constants/Colors';
 import { useRouter } from 'expo-router';
 export default function UserTripCard({trip}) {
     const formatData=(data)=>{
-        return JSON.parse(data);
+        try {
+            return data ? JSON.parse(data) : {};
+        } catch (error) {
+            console.log('Error parsing trip data:', error);
+            return {};
+        }
     }
+    
     const router=useRouter();
+    const tripData = formatData(trip?.tripData);
+    
   return (
 
     <TouchableOpacity
@@ -21,39 +29,42 @@ export default function UserTripCard({trip}) {
         gap:10,
         alignItems:'center'
     }}>
-        {/* <Image source={require('./../../assets/images/placeholder.jpeg')}
+        {tripData?.locationInfo?.photoRef ? (
+            <Image source={{uri:
+            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference='
+            +tripData.locationInfo?.photoRef
+            +'&key='+process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}}
             style={{
                 width:100,
-                height:100,
-                borderRadius:15
+                    height:100,
+                    borderRadius:15
             }}
-        /> */}
-        <Image source={{uri:
-        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference='
-        +formatData(trip.tripData).locationInfo?.photoRef
-        +'&key='+process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}}
-        style={{
-            width:100,
-                height:100,
-                borderRadius:15
-        }}
-        />
+            />
+        ) : (
+            <Image source={require('./../../assets/images/placeholder.jpeg')}
+                style={{
+                    width:100,
+                    height:100,
+                    borderRadius:15
+                }}
+            />
+        )}
         <View>
             <Text style={{
                 fontFamily:'outfit-medium',
                 fontSize:18,
-            }}>{trip.tripPlan?.travelPlan?.location}</Text>
+            }}>{trip?.tripPlan?.travelPlan?.location || 'Unknown Location'}</Text>
             <Text style={{
                 fontFamily:'outfit',
                 fontSize:14,
                 color:Colors.GRAY
-            }}>{moment(formatData(trip.tripData).startDate).format('DD MMM yyyy')}</Text>
+            }}>{tripData?.startDate ? moment(tripData.startDate).format('DD MMM yyyy') : 'Date TBD'}</Text>
             <Text
             style={{
                 fontFamily:'outfit',
                 fontSize:14,
                 color:Colors.GRAY
-            }}>Traveling: {formatData(trip.tripData).traveler.title}</Text>
+            }}>Traveling: {tripData?.traveler?.title || 'Solo'}</Text>
 
         </View>
     </TouchableOpacity>
