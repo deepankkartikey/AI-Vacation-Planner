@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "start": "npm config set audit-level moderate && expo start",
+    "dev": "npx @expo/cli@latest start --clear",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
