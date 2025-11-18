@@ -2,8 +2,8 @@ import { View, Text } from 'react-native'
 import React, { useContext, useEffect } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
-import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import {CreateTripContext} from './../../context/CreateTripContext'
+import NewGooglePlacesSearch from '../../components/CreateTrip/NewGooglePlacesSearch';
 export default function SearchPlace() {
 
   const navigation=useNavigation();
@@ -21,6 +21,21 @@ export default function SearchPlace() {
     console.log(tripData);
   },[tripData]);
 
+  const handlePlaceSelect = (placeData) => {
+    console.log('Selected place:', placeData);
+    
+    setTripData({
+      locationInfo: {
+        name: placeData.description,
+        coordinates: placeData.geometry?.location,
+        photoRef: placeData.photos?.[0]?.name,
+        url: placeData.website
+      }
+    });
+
+    router.push('/create-trip/select-traveler');
+  };
+
   return (
     <View 
     style={{
@@ -30,37 +45,27 @@ export default function SearchPlace() {
       height:'100%'
     }}
     >
+      <Text style={{
+        fontSize: 25,
+        fontFamily: 'outfit-bold',
+        marginBottom: 10
+      }}>
+        Search Your Destination
+      </Text>
       
-     
-      <GooglePlacesAutocomplete
-      placeholder='Search Place'
-      fetchDetails={true}
-      onFail={error=>console.log(error)}
-      onPress={(data, details = null) => {
-        setTripData({
-          locationInfo:{
-            name:data.description,
-            coordinates:details?.geometry.location,
-            photoRef:details?.photos[0]?.photo_reference,
-            url:details?.url
-          }
-        });
-
-        router.push('/create-trip/select-traveler')
-        
-      }}
-      query={{
-        key: process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY,
-        language: 'en',
-      }}
-      styles={{
-        textInputContainer:{
-          borderWidth:1,
-          borderRadius:5,
-          marginTop:25
-        }
-      }}
-    />
+      <Text style={{
+        fontSize: 18,
+        fontFamily: 'outfit',
+        color: Colors.GRAY,
+        marginBottom: 20
+      }}>
+        Find your perfect travel destination
+      </Text>
+      
+      <NewGooglePlacesSearch 
+        placeholder="Search for cities, countries, places..."
+        onPlaceSelect={handlePlaceSelect}
+      />
     </View>
   )
 }
