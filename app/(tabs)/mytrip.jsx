@@ -20,16 +20,53 @@ export default function MyTrip() {
   const GetMyTrips=async()=>{ 
     setLoading(true); 
     setUserTrips([]);
-    const q=query(collection(db,'UserTrips'),
-    where('userEmail','==',user?.email));
-    const querySnapshot=await getDocs(q);
-    querySnapshot.forEach((doc) => { 
-      // doc.data() is never undefined for query doc snapshots
-      console.log(doc.id, " => ", doc.data());
-      setUserTrips(prev=>[...prev,doc.data()])
-    });
-    setLoading(false);
     
+    console.log('🔍 Fetching trips for user:', {
+      email: user?.email,
+      uid: user?.uid
+    });
+    
+    try {
+      // First try without orderBy to see if there are any trips
+      const q=query(collection(db,'UserTrips'),
+        where('userEmail','==',user?.email)
+      );
+      
+      const querySnapshot=await getDocs(q);
+      console.log('📊 Query result count:', querySnapshot.size);
+      
+      if (querySnapshot.empty) {
+        console.log('❌ No trips found for this user');
+      }
+      
+      const trips = [];
+      querySnapshot.forEach((doc) => { 
+        console.log('📄 Found trip:', doc.id, " => ", doc.data());
+        trips.push(doc.data());
+      });
+      
+      // Sort by createdAt if available, otherwise by docId (timestamp)
+      trips.sort((a, b) => {
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt) - new Date(a.createdAt);
+        } else if (a.docId && b.docId) {
+          return parseInt(b.docId) - parseInt(a.docId);
+        }
+        return 0;
+      });
+      
+      setUserTrips(trips);
+    } catch (error) {
+      console.error('❌ Error fetching trips:', error);
+      console.error('❌ Error code:', error.code);
+      console.error('❌ Error message:', error.message);
+      
+      if (error.code === 'permission-denied') {
+        console.log('🔐 Permission denied - Firestore security rules need to be updated');
+      }
+    }
+    
+    setLoading(false);
   }
   return (
     <ScrollView style={{
