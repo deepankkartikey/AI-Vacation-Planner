@@ -39,16 +39,36 @@ export default function TripDetails() {
 
   return tripDetails&&(
     <ScrollView>
-         <Image source={{uri:
-        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference='
-        +(formatData(tripDetails?.tripData)?.locationInfo?.photoRef || '')
-        +'&key='+process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}}
-        style={{
-            width:'100%',
+         {formatData(tripDetails?.tripData)?.locationInfo?.photoRef ? (
+             <Image source={{uri:
+            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference='
+            +(formatData(tripDetails?.tripData)?.locationInfo?.photoRef || '')
+            +'&key='+process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}}
+            style={{
+                width:'100%',
                 height:330,
-                
-        }}
-        />
+            }}
+            />
+         ) : (
+             <View style={{
+                 width:'100%',
+                 height:330,
+                 backgroundColor: '#E5E5E5',
+                 justifyContent: 'center',
+                 alignItems: 'center'
+             }}>
+                 <Text style={{
+                     fontSize: 80,
+                     color: '#999'
+                 }}>🌍</Text>
+                 <Text style={{
+                     fontSize: 16,
+                     color: '#999',
+                     textAlign: 'center',
+                     fontFamily: 'outfit-medium'
+                 }}>{tripDetails?.tripPlan?.travelPlan?.location || 'Destination'}</Text>
+             </View>
+         )}
         <View style={{
             padding:15,
             backgroundColor:Colors.WHITE,
@@ -88,9 +108,15 @@ export default function TripDetails() {
         {/* Flight Info  */}
         <FlightInfo flightData={tripDetails?.tripPlan?.travelPlan?.flight} />
         {/* Hotels List  */}
-        <HotelList hotelList={tripDetails?.tripPlan?.travelPlan?.hotels || []} />
+        <HotelList 
+          hotelList={tripDetails?.tripPlan?.travelPlan?.hotels || []} 
+          location={tripDetails?.tripPlan?.travelPlan?.location}
+        />
         {/* Trip Day Planner Info */}
-        <PlannedTrip details={tripDetails?.tripPlan?.travelPlan?.itinerary || {}} />
+        <PlannedTrip 
+          details={tripDetails?.tripPlan?.travelPlan?.itinerary || {}} 
+          location={tripDetails?.tripPlan?.travelPlan?.location}
+        />
         </View>
     </ScrollView>
   )
