@@ -1,28 +1,18 @@
 import { View, Text, Image } from 'react-native'
-import React, { useEffect, useState } from 'react'
-import { GetPhotoRef } from '../../services/GooglePlaceApi';
+import React from 'react'
 
-export default function HotelCard({item, location}) {
- 
-    const [photoRef,setPhotoRef]=useState();
-    useEffect(()=>{
-        GetGooglePhotoRef();
-    },[])
-    
-    const GetGooglePhotoRef=async()=>{
-        const result= await GetPhotoRef(item.hotelName, location);
-        setPhotoRef(result);
-       }
+export default function HotelCard({item, index, imageRefs}) {
     const getImageUrl = () => {
-        if (photoRef) {
-            // Check if it's the new Places API (New) photo name format
+        // First try to use stored hotel image from imageRefs (convert index to string)
+        if (imageRefs?.hotels?.[index.toString()]) {
+            const photoRef = imageRefs.hotels[index.toString()];
             if (photoRef.startsWith('places/')) {
                 return `https://places.googleapis.com/v1/${photoRef}/media?maxWidthPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`;
             } else {
-                // Legacy photo reference format (fallback)
                 return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`;
             }
         }
+        
         // Fallback to a generic hotel image from a free service
         return `https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop&auto=format`;
     };
