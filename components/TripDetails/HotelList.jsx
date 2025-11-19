@@ -2,7 +2,7 @@ import { View, Text, FlatList, Image } from 'react-native'
 import React from 'react'
 import HotelCard from './HotelCard';
 
-export default function HotelList({hotelList}) {
+export default function HotelList({hotelList, location}) {
   return (
     <View style={{
         marginTop:20
@@ -20,7 +20,7 @@ export default function HotelList({hotelList}) {
       showsHorizontalScrollIndicator={false}
       horizontal={true}
       renderItem={({item,index})=>(
-       <HotelCard item={item} />
+       <HotelCard item={item} location={location} />
       )}
       />
     </View>
