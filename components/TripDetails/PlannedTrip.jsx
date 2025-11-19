@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity, Image } from 'react-native'
 import React from 'react'
 import PlaceCard from './PlaceCard';
-export default function PlannedTrip({details, location}) {
+export default function PlannedTrip({details, imageRefs}) {
   return (
     <View style={{
         marginTop:20
@@ -20,7 +20,7 @@ export default function PlannedTrip({details, location}) {
                 marginTop:20
             }}>{day.charAt(0).toUpperCase()+day.slice(1)}</Text>
             {dayDetails?.plan?.map((place,index)=>(
-             <PlaceCard place={place} location={location} key={index} />
+             <PlaceCard place={place} dayKey={day} index={index} imageRefs={imageRefs} key={index} />
             ))}
         </View>
       ))}

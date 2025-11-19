@@ -1,9 +1,8 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native'
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import moment from 'moment'
 import { Colors } from '../../constants/Colors';
 import { useRouter } from 'expo-router';
-import { GetPhotoRef } from '../../services/GooglePlaceApi';
 
 // Move formatData outside component to avoid hook ordering issues
 const formatData = (data) => {
@@ -16,34 +15,17 @@ const formatData = (data) => {
 };
 
 export default function UserTripCard({trip}) {
-    const [destinationPhoto, setDestinationPhoto] = useState(null);
-    const [loading, setLoading] = useState(true);
-    
     const router = useRouter();
     const tripData = formatData(trip?.tripData);
     
-    // Fetch destination-specific image when component mounts
-    useEffect(() => {
-        const fetchDestinationImage = async () => {
-            const destinationName = trip?.tripPlan?.travelPlan?.location || tripData?.locationInfo?.name;
-            if (destinationName) {
-                console.log(`🖼️ Fetching destination image for: ${destinationName}`);
-                const photoRef = await GetPhotoRef(destinationName);
-                setDestinationPhoto(photoRef);
-            }
-            setLoading(false);
-        };
-
-        fetchDestinationImage();
-    }, [trip?.tripPlan?.travelPlan?.location, tripData?.locationInfo?.name]);
-
     const getImageUrl = () => {
-        // First try to use the fetched destination photo
-        if (destinationPhoto) {
-            if (destinationPhoto.startsWith('places/')) {
-                return `https://places.googleapis.com/v1/${destinationPhoto}/media?maxWidthPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`;
+        // First try to use stored destination image from imageRefs
+        if (trip?.imageRefs?.destination) {
+            const photoRef = trip.imageRefs.destination;
+            if (photoRef.startsWith('places/')) {
+                return `https://places.googleapis.com/v1/${photoRef}/media?maxWidthPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`;
             } else {
-                return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${destinationPhoto}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`;
+                return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoRef}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`;
             }
         }
         

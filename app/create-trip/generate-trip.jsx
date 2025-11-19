@@ -7,15 +7,20 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { useRouter } from 'expo-router';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from './../../configs/FirebaseConfig'
+import { fetchTripImages } from '../../services/TripImageService'
 
 export default function GenerateTrip() {
     const { tripData, setTripData } = useContext(CreateTripContext);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const user = auth.currentUser;
     
     useEffect(() => {
-        GenerateAiTrip()
+        // Add small delay to ensure auth state is ready
+        const timer = setTimeout(() => {
+            GenerateAiTrip();
+        }, 100);
+        
+        return () => clearTimeout(timer);
     }, [])
 
     const createFreshChatSession = async () => {
@@ -272,14 +277,26 @@ export default function GenerateTrip() {
             const tripResp = JSON.parse(cleanText);
             console.log('✅ Trip data parsed successfully');
             
+            // Fetch images for all trip components (with error handling)
+            let imageRefs = {};
+            try {
+                console.log('📸 Fetching images for trip components...');
+                imageRefs = await fetchTripImages(tripResp, tripData?.locationInfo?.name);
+                console.log('✅ Image fetching completed');
+            } catch (imageError) {
+                console.warn('⚠️ Image fetching failed, but continuing with trip save:', imageError.message);
+                // Continue without images - they'll fall back to placeholders
+            }
+            
             // Debug user authentication status
+            const currentUser = auth.currentUser;
             console.log('👤 Current user status:', {
-                uid: user?.uid,
-                email: user?.email,
-                isAuthenticated: !!user
+                uid: currentUser?.uid,
+                email: currentUser?.email,
+                isAuthenticated: !!currentUser
             });
             
-            if (!user) {
+            if (!currentUser) {
                 throw new Error('User not authenticated. Please sign in again.');
             }
             
@@ -288,12 +305,13 @@ export default function GenerateTrip() {
             
             try {
                 const result_ = await setDoc(doc(db, "UserTrips", docId), {
-                    userEmail: user.email,
+                    userEmail: currentUser.email,
                     tripPlan: tripResp,// AI Result 
                     tripData: JSON.stringify(tripData),//User Selection Data
+                    imageRefs: imageRefs, // Store fetched image references
                     docId: docId,
                     createdAt: new Date().toISOString(),
-                    userId: user.uid
+                    userId: currentUser.uid
                 });
                 
                 console.log('✅ Trip saved to Firebase successfully');

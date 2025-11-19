@@ -39,7 +39,19 @@ export default function TripDetails() {
 
   return tripDetails&&(
     <ScrollView>
-         {formatData(tripDetails?.tripData)?.locationInfo?.photoRef ? (
+        {/* First try stored destination image, then fallback */}
+        {tripDetails?.imageRefs?.destination ? (
+            <Image 
+                source={{uri: tripDetails.imageRefs.destination.startsWith('places/') 
+                    ? `https://places.googleapis.com/v1/${tripDetails.imageRefs.destination}/media?maxWidthPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`
+                    : `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${tripDetails.imageRefs.destination}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`
+                }}
+                style={{
+                    width:'100%',
+                    height:330,
+                }}
+            />
+        ) : formatData(tripDetails?.tripData)?.locationInfo?.photoRef ? (
              <Image source={{uri:
             'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference='
             +(formatData(tripDetails?.tripData)?.locationInfo?.photoRef || '')
@@ -50,24 +62,12 @@ export default function TripDetails() {
             }}
             />
          ) : (
-             <View style={{
-                 width:'100%',
-                 height:330,
-                 backgroundColor: '#E5E5E5',
-                 justifyContent: 'center',
-                 alignItems: 'center'
-             }}>
-                 <Text style={{
-                     fontSize: 80,
-                     color: '#999'
-                 }}>🌍</Text>
-                 <Text style={{
-                     fontSize: 16,
-                     color: '#999',
-                     textAlign: 'center',
-                     fontFamily: 'outfit-medium'
-                 }}>{tripDetails?.tripPlan?.travelPlan?.location || 'Destination'}</Text>
-             </View>
+             <Image source={{ uri: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=330&fit=crop&auto=format' }}
+                style={{
+                    width:'100%',
+                    height:330,
+                }}
+             />
          )}
         <View style={{
             padding:15,
@@ -110,12 +110,12 @@ export default function TripDetails() {
         {/* Hotels List  */}
         <HotelList 
           hotelList={tripDetails?.tripPlan?.travelPlan?.hotels || []} 
-          location={tripDetails?.tripPlan?.travelPlan?.location}
+          imageRefs={tripDetails?.imageRefs}
         />
         {/* Trip Day Planner Info */}
         <PlannedTrip 
           details={tripDetails?.tripPlan?.travelPlan?.itinerary || {}} 
-          location={tripDetails?.tripPlan?.travelPlan?.location}
+          imageRefs={tripDetails?.imageRefs}
         />
         </View>
     </ScrollView>
