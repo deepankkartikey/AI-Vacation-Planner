@@ -68,6 +68,13 @@ export default function MyTrip() {
     
     setLoading(false);
   }
+
+  const handleTripDeleted = (deletedTripId) => {
+    console.log(`🗑️ Trip deleted: ${deletedTripId}, refreshing trip list...`);
+    // Refresh the trips list after deletion
+    GetMyTrips();
+  };
+
   return (
     <ScrollView style={{
       padding:25,
@@ -97,7 +104,10 @@ export default function MyTrip() {
       {userTrips?.length==0? 
         <StartNewTripCard/>
         :
-        <UserTripList userTrips={userTrips} />
+        <UserTripList 
+          userTrips={userTrips} 
+          onTripDeleted={handleTripDeleted}
+        />
       } 
       <View style={{
         height:100
