@@ -5,6 +5,7 @@ import { Stack } from "expo-router";
 import {CreateTripContext} from '../context/CreateTripContext'
 import { useState, useEffect } from "react";
 import { LogBox } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 // Suppress specific warnings from third-party libraries
 LogBox.ignoreLogs([
@@ -37,12 +38,14 @@ const [fontsLoaded] = useFonts({
   }
 
   return (
-    <CreateTripContext.Provider value={{tripData,setTripData}}>
-    <Stack screenOptions={{
-      headerShown:false
-    }}>
-    <Stack.Screen name="(tabs)"/>
-    </Stack>
-    </CreateTripContext.Provider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <CreateTripContext.Provider value={{tripData,setTripData}}>
+        <Stack screenOptions={{
+          headerShown:false
+        }}>
+          <Stack.Screen name="(tabs)"/>
+        </Stack>
+      </CreateTripContext.Provider>
+    </GestureHandlerRootView>
   );
 }

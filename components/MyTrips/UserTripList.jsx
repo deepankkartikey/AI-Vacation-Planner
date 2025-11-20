@@ -1,15 +1,33 @@
 import { View, Text, Image, TouchableOpacity } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import moment from 'moment'
 import { Colors } from '../../constants/Colors'
 import UserTripCard from './UserTripCard'
 import { useRouter } from 'expo-router'
-export default function UserTripList({userTrips}) {
+
+export default function UserTripList({userTrips, onTripDeleted}) {
+    const [trips, setTrips] = useState(userTrips || []);
+    
+    // Update trips when userTrips prop changes
+    React.useEffect(() => {
+        setTrips(userTrips || []);
+    }, [userTrips]);
+
+    const handleTripDelete = (deletedTripId) => {
+        // Remove the deleted trip from local state for immediate UI update
+        setTrips(prevTrips => prevTrips.filter(trip => trip.docId !== deletedTripId));
+        
+        // Notify parent component to refresh data
+        if (onTripDeleted) {
+            onTripDeleted(deletedTripId);
+        }
+    };
+
     // Safely parse the trip data with error handling
     let LatestTrip = {};
     try {
-        if (userTrips && userTrips[0] && userTrips[0].tripData) {
-            LatestTrip = JSON.parse(userTrips[0].tripData);
+        if (trips && trips[0] && trips[0].tripData) {
+            LatestTrip = JSON.parse(trips[0].tripData);
         }
     } catch (error) {
         console.log('Error parsing trip data:', error);
@@ -18,7 +36,8 @@ export default function UserTripList({userTrips}) {
     
     const router=useRouter();
    
-  return userTrips&&(
+   
+  return trips && trips.length > 0 && (
     <View>
       <View style={{
         marginTop:20
@@ -49,7 +68,7 @@ export default function UserTripList({userTrips}) {
             <Text style={{
                 fontFamily:'outfit-medium',
                 fontSize:24
-            }}>{userTrips[0]?.tripPlan?.travelPlan?.location || 'Unknown Location'}</Text>
+            }}>{trips[0]?.tripPlan?.travelPlan?.location || 'Unknown Location'}</Text>
             <View style={{
                 display:'flex',
                 flexDirection:'row',
@@ -69,7 +88,7 @@ export default function UserTripList({userTrips}) {
             </View>
             <TouchableOpacity 
             onPress={()=>router.push({pathname:'/trip-details',params:{
-                trip:JSON.stringify(userTrips[0])
+                trip:JSON.stringify(trips[0])
             }})}
             style={{
                 backgroundColor:Colors.PRIMARY,
@@ -86,8 +105,12 @@ export default function UserTripList({userTrips}) {
             </TouchableOpacity>
         </View>
             
-        {userTrips.map((trip,index)=>(
-            <UserTripCard trip={trip} key={index} />
+        {trips.slice(1).map((trip,index)=>(
+            <UserTripCard 
+                trip={trip} 
+                key={trip.docId || index} 
+                onDelete={handleTripDelete}
+            />
         ))}
       </View>
     </View>
