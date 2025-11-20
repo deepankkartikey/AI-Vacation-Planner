@@ -80,7 +80,7 @@ export default function UserTripCard({trip, onDelete}) {
                                 }).start(() => {
                                     // Call parent component's onDelete to refresh the list
                                     if (onDelete) {
-                                        onDelete(trip.docId);
+                                        onDelete(trip); // Pass full trip data for undo functionality
                                     }
                                 });
                             } else {
