@@ -1,9 +1,11 @@
-import { View, Text, Image, TouchableOpacity } from 'react-native'
+import { View, Text, Image, TouchableOpacity, Alert } from 'react-native'
 import React, { useState } from 'react'
 import moment from 'moment'
 import { Colors } from '../../constants/Colors'
 import UserTripCard from './UserTripCard'
 import { useRouter } from 'expo-router'
+import { Ionicons } from '@expo/vector-icons'
+import { deleteTrip } from '../../services/TripService'
 
 export default function UserTripList({userTrips, onTripDeleted}) {
     const [trips, setTrips] = useState(userTrips || []);
@@ -13,14 +15,47 @@ export default function UserTripList({userTrips, onTripDeleted}) {
         setTrips(userTrips || []);
     }, [userTrips]);
 
-    const handleTripDelete = (deletedTripId) => {
+    const handleTripDelete = (deletedTrip) => {
         // Remove the deleted trip from local state for immediate UI update
-        setTrips(prevTrips => prevTrips.filter(trip => trip.docId !== deletedTripId));
+        setTrips(prevTrips => prevTrips.filter(trip => trip.docId !== deletedTrip.docId));
         
-        // Notify parent component to refresh data
+        // Notify parent component to show undo option
         if (onTripDeleted) {
-            onTripDeleted(deletedTripId);
+            onTripDeleted(deletedTrip);
         }
+    };
+
+    const handleFeaturedTripDelete = () => {
+        if (!trips || trips.length === 0) return;
+        
+        const featuredTrip = trips[0];
+        
+        Alert.alert(
+            "Delete Trip",
+            `Are you sure you want to delete your trip to ${featuredTrip?.tripPlan?.travelPlan?.location || 'this destination'}?`,
+            [
+                {
+                    text: "Cancel",
+                    style: "cancel"
+                },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            const result = await deleteTrip(featuredTrip.docId);
+                            if (result.success) {
+                                handleTripDelete(featuredTrip);
+                            } else {
+                                Alert.alert("Error", "Failed to delete trip. Please try again.");
+                            }
+                        } catch (error) {
+                            Alert.alert("Error", "An error occurred while deleting the trip.");
+                        }
+                    }
+                }
+            ]
+        );
     };
 
     // Safely parse the trip data with error handling
@@ -65,10 +100,25 @@ export default function UserTripList({userTrips, onTripDeleted}) {
             }}
         />}
         <View style={{marginTop:10}}>
-            <Text style={{
-                fontFamily:'outfit-medium',
-                fontSize:24
-            }}>{trips[0]?.tripPlan?.travelPlan?.location || 'Unknown Location'}</Text>
+            <View style={{
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
+                <Text style={{
+                    fontFamily:'outfit-medium',
+                    fontSize:24,
+                    flex: 1
+                }}>{trips[0]?.tripPlan?.travelPlan?.location || 'Unknown Location'}</Text>
+                <TouchableOpacity 
+                    onPress={handleFeaturedTripDelete}
+                    style={{
+                        padding: 8,
+                    }}
+                >
+                    <Ionicons name="trash-outline" size={24} color={Colors.GRAY} />
+                </TouchableOpacity>
+            </View>
             <View style={{
                 display:'flex',
                 flexDirection:'row',
