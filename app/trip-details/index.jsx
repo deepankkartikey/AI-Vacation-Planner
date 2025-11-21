@@ -122,6 +122,7 @@ export default function TripDetails() {
         <PlannedTrip 
           details={tripDetails?.tripPlan?.travelPlan?.itinerary || {}} 
           imageRefs={tripDetails?.imageRefs}
+          tripId={tripDetails?.docId}
         />
         </View>
     </ScrollView>
