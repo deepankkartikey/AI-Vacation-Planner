@@ -106,7 +106,13 @@ export default function TripDetails() {
         
         
         {/* Flight Info  */}
-        <FlightInfo flightData={tripDetails?.tripPlan?.travelPlan?.flight} />
+        <FlightInfo 
+          flightData={tripDetails?.tripPlan?.travelPlan?.flight}
+          destination={tripDetails?.tripPlan?.travelPlan?.location}
+          startDate={formatData(tripDetails?.tripData)?.startDate}
+          endDate={formatData(tripDetails?.tripData)?.endDate}
+          travelers={formatData(tripDetails?.tripData)?.traveler?.title}
+        />
         {/* Hotels List  */}
         <HotelList 
           hotelList={tripDetails?.tripPlan?.travelPlan?.hotels || []} 
