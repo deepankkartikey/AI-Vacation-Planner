@@ -17,6 +17,12 @@ web-build/
 .env.test
 .env.production
 
+# VS Code workspace settings (may contain secrets)
+.vscode/settings.json
+
+# Setup guides with credentials
+jira-mcp-setup.md
+
 # macOS
 .DS_Store
 
