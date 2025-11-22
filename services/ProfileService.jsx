@@ -433,18 +433,104 @@ export class ProfileService {
   /**
    * Increment trip statistics
    * @param {string} userId - Firebase user ID
+   * @param {Object} tripData - Optional trip data for additional stats
    */
-  static async incrementTripCount(userId) {
+  static async incrementTripCount(userId, tripData = null) {
     try {
       const profile = await this.getUserProfile(userId);
+      
+      // Calculate places count from trip data if available
+      let placesCount = 0;
+      if (tripData?.tripPlan?.itinerary) {
+        const itinerary = tripData.tripPlan.itinerary;
+        itinerary.forEach(day => {
+          if (day.places) {
+            placesCount += day.places.length;
+          }
+        });
+      }
+      
       const newStats = {
         ...profile.stats,
         tripsPlanned: (profile.stats?.tripsPlanned || 0) + 1,
+        placesVisited: (profile.stats?.placesVisited || 0) + placesCount,
       };
+      
+      // Add destination to favorites if trip data available
+      if (tripData?.tripData) {
+        const tripDataParsed = typeof tripData.tripData === 'string' 
+          ? JSON.parse(tripData.tripData) 
+          : tripData.tripData;
+        
+        const destination = tripDataParsed.locationInfo?.name || tripDataParsed.location;
+        
+        if (destination) {
+          const favoriteDestinations = profile.stats?.favoriteDestinations || [];
+          // Add destination if not already in favorites (keep last 5)
+          if (!favoriteDestinations.includes(destination)) {
+            newStats.favoriteDestinations = [destination, ...favoriteDestinations].slice(0, 5);
+          }
+        }
+      }
 
       await this.updateProfileSection(userId, 'stats', newStats);
+      console.log(`📊 Stats updated: ${newStats.tripsPlanned} trips, ${newStats.placesVisited} places`);
+      
+      return newStats;
     } catch (error) {
       console.error('❌ Error incrementing trip count:', error);
+      // Don't throw - stats update shouldn't break trip creation
+    }
+  }
+
+  /**
+   * Decrement trip statistics when a trip is deleted
+   * @param {string} userId - Firebase user ID
+   * @param {Object} tripData - Trip data being deleted
+   */
+  static async decrementTripCount(userId, tripData = null) {
+    try {
+      const profile = await this.getUserProfile(userId);
+      
+      // Calculate places count from trip data if available
+      let placesCount = 0;
+      if (tripData?.tripPlan?.itinerary) {
+        const itinerary = tripData.tripPlan.itinerary;
+        itinerary.forEach(day => {
+          if (day.places) {
+            placesCount += day.places.length;
+          }
+        });
+      }
+      
+      const newStats = {
+        ...profile.stats,
+        tripsPlanned: Math.max((profile.stats?.tripsPlanned || 0) - 1, 0), // Don't go below 0
+        placesVisited: Math.max((profile.stats?.placesVisited || 0) - placesCount, 0),
+      };
+      
+      // Remove destination from favorites if trip data available
+      if (tripData?.tripData) {
+        const tripDataParsed = typeof tripData.tripData === 'string' 
+          ? JSON.parse(tripData.tripData) 
+          : tripData.tripData;
+        
+        const destination = tripDataParsed.locationInfo?.name || tripDataParsed.location;
+        
+        if (destination) {
+          const favoriteDestinations = profile.stats?.favoriteDestinations || [];
+          // Remove destination from favorites
+          newStats.favoriteDestinations = favoriteDestinations.filter(d => d !== destination);
+        }
+      }
+
+      await this.updateProfileSection(userId, 'stats', newStats);
+      console.log(`📊 Stats decremented: ${newStats.tripsPlanned} trips, ${newStats.placesVisited} places`);
+      
+      return newStats;
+    } catch (error) {
+      console.error('❌ Error decrementing trip count:', error);
+      // Don't throw - stats update shouldn't break trip deletion
     }
   }
 }
