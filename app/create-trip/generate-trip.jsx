@@ -278,17 +278,6 @@ export default function GenerateTrip() {
             const tripResp = JSON.parse(cleanText);
             console.log('✅ Trip data parsed successfully');
             
-            // Fetch images for all trip components (with error handling)
-            let imageRefs = {};
-            try {
-                console.log('📸 Fetching images for trip components...');
-                imageRefs = await fetchTripImages(tripResp, tripData?.locationInfo?.name);
-                console.log('✅ Image fetching completed');
-            } catch (imageError) {
-                console.warn('⚠️ Image fetching failed, but continuing with trip save:', imageError.message);
-                // Continue without images - they'll fall back to placeholders
-            }
-            
             // Debug user authentication status
             const currentUser = auth.currentUser;
             console.log('👤 Current user status:', {
@@ -302,29 +291,44 @@ export default function GenerateTrip() {
             }
             
             const docId = (Date.now()).toString();
-            console.log('💾 Attempting to save trip with docId:', docId);
+            console.log('💾 Saving trip immediately (images will load in background)...');
             
             try {
+                // Save trip immediately with empty imageRefs
                 const tripDocument = {
                     userEmail: currentUser.email,
                     tripPlan: tripResp,// AI Result 
                     tripData: JSON.stringify(tripData),//User Selection Data
-                    imageRefs: imageRefs, // Store fetched image references
+                    imageRefs: {}, // Empty for now - will update in background
                     docId: docId,
                     createdAt: new Date().toISOString(),
                     userId: currentUser.uid
                 };
                 
-                const result_ = await setDoc(doc(db, "UserTrips", docId), tripDocument);
-                
+                await setDoc(doc(db, "UserTrips", docId), tripDocument);
                 console.log('✅ Trip saved to Firebase successfully');
+                
+                // Navigate immediately - don't wait for images
+                router.push('(tabs)/mytrip');
+                
+                // Fetch images in background and update the trip document
+                console.log('📸 Fetching images in background...');
+                fetchTripImages(tripResp, tripData?.locationInfo?.name)
+                    .then(async (imageRefs) => {
+                        console.log('✅ Background images fetched, updating trip...');
+                        await setDoc(doc(db, "UserTrips", docId), {
+                            ...tripDocument,
+                            imageRefs: imageRefs
+                        });
+                        console.log('✅ Trip updated with images');
+                    })
+                    .catch(err => console.log('⚠️ Background image fetch failed:', err.message));
                 
                 // Update user stats (don't wait for it - run in background)
                 ProfileService.incrementTripCount(currentUser.uid, tripDocument)
                     .then(() => console.log('✅ User stats updated'))
                     .catch(err => console.log('⚠️ Stats update failed (non-critical):', err.message));
                 
-                router.push('(tabs)/mytrip');
             } catch (firestoreError) {
                 console.error('❌ Firestore save error:', firestoreError);
                 console.error('❌ Error code:', firestoreError.code);
