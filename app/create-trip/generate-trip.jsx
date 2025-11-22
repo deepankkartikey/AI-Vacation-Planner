@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from './../../configs/FirebaseConfig'
 import { fetchTripImages } from '../../services/TripImageService'
+import ProfileService from '../../services/ProfileService'
 
 export default function GenerateTrip() {
     const { tripData, setTripData } = useContext(CreateTripContext);
@@ -304,7 +305,7 @@ export default function GenerateTrip() {
             console.log('💾 Attempting to save trip with docId:', docId);
             
             try {
-                const result_ = await setDoc(doc(db, "UserTrips", docId), {
+                const tripDocument = {
                     userEmail: currentUser.email,
                     tripPlan: tripResp,// AI Result 
                     tripData: JSON.stringify(tripData),//User Selection Data
@@ -312,9 +313,17 @@ export default function GenerateTrip() {
                     docId: docId,
                     createdAt: new Date().toISOString(),
                     userId: currentUser.uid
-                });
+                };
+                
+                const result_ = await setDoc(doc(db, "UserTrips", docId), tripDocument);
                 
                 console.log('✅ Trip saved to Firebase successfully');
+                
+                // Update user stats (don't wait for it - run in background)
+                ProfileService.incrementTripCount(currentUser.uid, tripDocument)
+                    .then(() => console.log('✅ User stats updated'))
+                    .catch(err => console.log('⚠️ Stats update failed (non-critical):', err.message));
+                
                 router.push('(tabs)/mytrip');
             } catch (firestoreError) {
                 console.error('❌ Firestore save error:', firestoreError);

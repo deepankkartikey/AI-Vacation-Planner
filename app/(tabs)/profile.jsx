@@ -575,6 +575,19 @@ export default function Profile() {
             <Text style={styles.statLabel}>Places Visited</Text>
           </View>
         </View>
+        
+        {profile.stats?.favoriteDestinations && profile.stats.favoriteDestinations.length > 0 && (
+          <View style={styles.favoritesSection}>
+            <Text style={styles.favoritesTitle}>Recent Destinations</Text>
+            <View style={styles.destinationTags}>
+              {profile.stats.favoriteDestinations.map((destination, index) => (
+                <View key={index} style={styles.destinationTag}>
+                  <Text style={styles.destinationTagText}>📍 {destination}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
       </View>
 
       <View style={styles.bottomPadding} />
@@ -935,6 +948,33 @@ const styles = StyleSheet.create({
     color: Colors.GRAY,
     marginTop: 5,
     textAlign: 'center',
+  },
+  favoritesSection: {
+    marginTop: 20,
+  },
+  favoritesTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.GRAY,
+    marginBottom: 10,
+  },
+  destinationTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  destinationTag: {
+    backgroundColor: Colors.LIGHT_GRAY,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: Colors.PRIMARY,
+  },
+  destinationTagText: {
+    fontSize: 12,
+    color: Colors.PRIMARY,
+    fontWeight: '500',
   },
   bottomPadding: {
     height: 30,
