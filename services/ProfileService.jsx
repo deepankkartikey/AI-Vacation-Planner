@@ -2,8 +2,108 @@ import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { db, storage } from '../configs/FirebaseConfig';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getUserLocation } from './LocationService';
 
 const PROFILE_CACHE_KEY = 'user_profile_cache';
+
+/**
+ * Helper function to get currency and locale settings based on country
+ */
+const getLocaleDefaults = (country) => {
+  const countryUpper = country?.toUpperCase() || '';
+  
+  // Country to currency/locale mapping
+  const localeMap = {
+    // North America
+    'CANADA': { currency: 'CAD', units: 'metric', language: 'en' },
+    'UNITED STATES': { currency: 'USD', units: 'imperial', language: 'en' },
+    'USA': { currency: 'USD', units: 'imperial', language: 'en' },
+    'MEXICO': { currency: 'MXN', units: 'metric', language: 'es' },
+    
+    // Europe
+    'UNITED KINGDOM': { currency: 'GBP', units: 'imperial', language: 'en' },
+    'UK': { currency: 'GBP', units: 'imperial', language: 'en' },
+    'FRANCE': { currency: 'EUR', units: 'metric', language: 'fr' },
+    'GERMANY': { currency: 'EUR', units: 'metric', language: 'de' },
+    'SPAIN': { currency: 'EUR', units: 'metric', language: 'es' },
+    'ITALY': { currency: 'EUR', units: 'metric', language: 'en' },
+    'NETHERLANDS': { currency: 'EUR', units: 'metric', language: 'en' },
+    'BELGIUM': { currency: 'EUR', units: 'metric', language: 'en' },
+    'AUSTRIA': { currency: 'EUR', units: 'metric', language: 'de' },
+    'SWITZERLAND': { currency: 'CHF', units: 'metric', language: 'en' },
+    'PORTUGAL': { currency: 'EUR', units: 'metric', language: 'en' },
+    'GREECE': { currency: 'EUR', units: 'metric', language: 'en' },
+    'IRELAND': { currency: 'EUR', units: 'metric', language: 'en' },
+    'SWEDEN': { currency: 'SEK', units: 'metric', language: 'en' },
+    'NORWAY': { currency: 'NOK', units: 'metric', language: 'en' },
+    'DENMARK': { currency: 'DKK', units: 'metric', language: 'en' },
+    'FINLAND': { currency: 'EUR', units: 'metric', language: 'en' },
+    
+    // Asia Pacific
+    'AUSTRALIA': { currency: 'AUD', units: 'metric', language: 'en' },
+    'NEW ZEALAND': { currency: 'NZD', units: 'metric', language: 'en' },
+    'JAPAN': { currency: 'JPY', units: 'metric', language: 'en' },
+    'CHINA': { currency: 'CNY', units: 'metric', language: 'en' },
+    'INDIA': { currency: 'INR', units: 'metric', language: 'en' },
+    'SINGAPORE': { currency: 'SGD', units: 'metric', language: 'en' },
+    'HONG KONG': { currency: 'HKD', units: 'metric', language: 'en' },
+    'SOUTH KOREA': { currency: 'KRW', units: 'metric', language: 'en' },
+    'THAILAND': { currency: 'THB', units: 'metric', language: 'en' },
+    
+    // Middle East
+    'UAE': { currency: 'AED', units: 'metric', language: 'en' },
+    'SAUDI ARABIA': { currency: 'SAR', units: 'metric', language: 'en' },
+    
+    // South America
+    'BRAZIL': { currency: 'BRL', units: 'metric', language: 'en' },
+    'ARGENTINA': { currency: 'ARS', units: 'metric', language: 'es' },
+    'CHILE': { currency: 'CLP', units: 'metric', language: 'es' },
+  };
+  
+  // Check for exact match or partial match
+  for (const [key, value] of Object.entries(localeMap)) {
+    if (countryUpper.includes(key) || key.includes(countryUpper)) {
+      return value;
+    }
+  }
+  
+  // Default fallback
+  return { currency: 'USD', units: 'imperial', language: 'en' };
+};
+
+/**
+ * Get user's location-based defaults
+ */
+const getUserLocationDefaults = async () => {
+  try {
+    console.log('🌍 Detecting user location for defaults...');
+    const locationData = await getUserLocation();
+    
+    if (locationData.success && locationData.country) {
+      const locale = getLocaleDefaults(locationData.country);
+      console.log(`📍 Location detected: ${locationData.city}, ${locationData.country}`);
+      console.log(`💰 Using currency: ${locale.currency}, units: ${locale.units}, language: ${locale.language}`);
+      
+      return {
+        homeCity: locationData.city || '',
+        country: locationData.country || '',
+        ...locale
+      };
+    }
+  } catch (error) {
+    console.log('⚠️ Could not detect location, using defaults:', error.message);
+  }
+  
+  // Fallback defaults
+  return {
+    homeCity: '',
+    country: '',
+    currency: 'USD',
+    units: 'imperial',
+    language: 'en'
+  };
+};
+
 
 /**
  * ProfileService - Manages user profile data in Firestore
@@ -44,9 +144,48 @@ export class ProfileService {
         console.log('✅ Profile loaded from Firestore');
         return profileData;
       } else {
-        // Return default profile structure
-        console.log('⚠️ No profile found, returning default');
-        return this.getDefaultProfile();
+        // Profile doesn't exist - create a new one with location-based defaults
+        console.log('⚠️ No profile found, creating new profile...');
+        
+        // Get location-based defaults
+        const locationDefaults = await getUserLocationDefaults();
+        
+        const defaultProfile = this.getDefaultProfile();
+        
+        // Merge location defaults with profile defaults
+        const profileWithDefaults = {
+          ...defaultProfile,
+          homeCity: locationDefaults.homeCity || defaultProfile.homeCity,
+          settings: {
+            ...defaultProfile.settings,
+            currency: locationDefaults.currency || defaultProfile.settings.currency,
+            units: locationDefaults.units || defaultProfile.settings.units,
+            language: locationDefaults.language || defaultProfile.settings.language,
+          },
+          preferences: {
+            ...defaultProfile.preferences,
+            budgetRange: {
+              ...defaultProfile.preferences.budgetRange,
+              currency: locationDefaults.currency || defaultProfile.preferences.budgetRange.currency,
+            }
+          },
+          metadata: {
+            detectedCountry: locationDefaults.country,
+            autoConfigured: true,
+          },
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        // Create the profile in Firestore
+        await setDoc(profileRef, profileWithDefaults);
+        
+        console.log('✅ New profile created with location-based defaults');
+        
+        // Cache the new profile
+        await AsyncStorage.setItem(`${PROFILE_CACHE_KEY}_${userId}`, JSON.stringify(profileWithDefaults));
+        
+        return profileWithDefaults;
       }
     } catch (error) {
       console.error('❌ Error fetching profile:', error);
@@ -205,6 +344,7 @@ export class ProfileService {
       email: '',
       phone: '',
       homeCity: '',
+      country: '',
       photoUrl: '',
       
       // Travel Preferences
@@ -237,6 +377,12 @@ export class ProfileService {
         tripsPlanned: 0,
         placesVisited: 0,
         favoriteDestinations: [],
+      },
+      
+      // Metadata
+      metadata: {
+        detectedCountry: '',
+        autoConfigured: false,
       },
       
       // Timestamps

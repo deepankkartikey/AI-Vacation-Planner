@@ -6,6 +6,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import ProfileService from '../../services/ProfileService'
 import * as ImagePicker from 'expo-image-picker'
 import { Ionicons } from '@expo/vector-icons'
+import AvatarInitials from '../../components/Profile/AvatarInitials'
 
 export default function Profile() {
   const [loading, setLoading] = useState(true)
@@ -246,9 +247,10 @@ export default function Profile() {
             {profile.photoUrl ? (
               <Image source={{ uri: profile.photoUrl }} style={styles.profilePhoto} />
             ) : (
-              <View style={styles.photoPlaceholder}>
-                <Ionicons name="person" size={50} color={Colors.GRAY} />
-              </View>
+              <AvatarInitials 
+                name={profile.name || 'User'} 
+                size={120}
+              />
             )}
             {uploadingPhoto && (
               <View style={styles.photoLoading}>
@@ -334,6 +336,16 @@ export default function Profile() {
             editable={isEditing}
           />
         </View>
+
+        {profile.country && (
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Country</Text>
+            <View style={[styles.input, styles.inputDisabled, styles.countryDisplay]}>
+              <Text style={styles.countryText}>🌍 {profile.country}</Text>
+              <Text style={styles.countryHint}>Auto-detected from your location</Text>
+            </View>
+          </View>
+        )}
       </View>
 
       {/* Travel Preferences */}
@@ -743,6 +755,22 @@ const styles = StyleSheet.create({
   inputDisabled: {
     backgroundColor: Colors.LIGHT_GRAY,
     color: Colors.GRAY,
+  },
+  countryDisplay: {
+    flexDirection: 'column',
+    justifyContent: 'center',
+    minHeight: 50,
+  },
+  countryText: {
+    fontSize: 16,
+    color: Colors.BLACK,
+    fontWeight: '500',
+  },
+  countryHint: {
+    fontSize: 12,
+    color: Colors.GRAY,
+    marginTop: 4,
+    fontStyle: 'italic',
   },
   travelStyleContainer: {
     flexDirection: 'row',
