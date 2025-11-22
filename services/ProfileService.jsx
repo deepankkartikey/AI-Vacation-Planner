@@ -229,6 +229,8 @@ export class ProfileService {
         `${PROFILE_CACHE_KEY}_${userId}`,
         JSON.stringify(dataToSave)
       );
+      
+      console.log('✅ Profile saved to Firestore and cache updated');
     } catch (error) {
       console.error('❌ Error saving profile:', error);
       throw error;
@@ -401,15 +403,27 @@ export class ProfileService {
     try {
       const profileRef = doc(db, 'Users', userId);
       
-      await updateDoc(profileRef, {
+      const updateData = {
         [section]: data,
         updatedAt: new Date().toISOString(),
-      });
+      };
 
-      // Clear cache to force refresh
-      await this.clearProfileCache(userId);
+      await updateDoc(profileRef, updateData);
+
+      // Update cache instead of clearing it
+      const cachedProfile = await AsyncStorage.getItem(`${PROFILE_CACHE_KEY}_${userId}`);
+      if (cachedProfile) {
+        const profile = JSON.parse(cachedProfile);
+        const updatedProfile = {
+          ...profile,
+          [section]: data,
+          updatedAt: new Date().toISOString(),
+        };
+        await AsyncStorage.setItem(`${PROFILE_CACHE_KEY}_${userId}`, JSON.stringify(updatedProfile));
+        console.log(`✅ Profile section '${section}' updated in cache`);
+      }
       
-      console.log(`✅ Profile section '${section}' updated`);
+      console.log(`✅ Profile section '${section}' updated in Firestore`);
     } catch (error) {
       console.error(`❌ Error updating section '${section}':`, error);
       throw error;
