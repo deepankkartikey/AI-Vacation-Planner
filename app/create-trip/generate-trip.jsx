@@ -13,15 +13,37 @@ import ProfileService from '../../services/ProfileService'
 export default function GenerateTrip() {
     const { tripData, setTripData } = useContext(CreateTripContext);
     const [loading, setLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('Finding places for you...');
     const router = useRouter();
     
+    // Loading messages to rotate through
+    const loadingMessages = [
+        'Finding places for you...',
+        'Searching destinations...',
+        'Collecting data...',
+        'Generating itinerary...',
+        'Planning activities...',
+        'Finding best hotels...',
+        'Creating your perfect trip...'
+    ];
+    
     useEffect(() => {
+        // Rotate loading messages every 5 seconds
+        let messageIndex = 0;
+        const messageInterval = setInterval(() => {
+            messageIndex = (messageIndex + 1) % loadingMessages.length;
+            setLoadingMessage(loadingMessages[messageIndex]);
+        }, 5000);
+        
         // Add small delay to ensure auth state is ready
         const timer = setTimeout(() => {
             GenerateAiTrip();
         }, 100);
         
-        return () => clearTimeout(timer);
+        return () => {
+            clearTimeout(timer);
+            clearInterval(messageInterval);
+        };
     }, [])
 
     const createFreshChatSession = async () => {
@@ -38,13 +60,17 @@ export default function GenerateTrip() {
             
             return {
                 sendMessage: async (prompt) => {
-                    // Use only v1 API with Gemini 2.5 models
-                    const models = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+                    // Use Gemini 2.5 models in order of preference
+                    const models = [
+                        'gemini-2.5-flash-lite',  // Fastest, lightweight
+                        'gemini-2.5-flash',       // Balanced speed and quality
+                        'gemini-2.5-pro',         // Most capable
+                    ];
                     let lastError = null;
                     
                     for (const modelName of models) {
                         try {
-                            console.log(`🔄 Trying v1 API with model: ${modelName}`);
+                            console.log(`🔄 Trying with model: ${modelName}`);
                             const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`, {
                                 method: 'POST',
                                 headers: {
@@ -57,10 +83,10 @@ export default function GenerateTrip() {
                                         }]
                                     }],
                                     generationConfig: {
-                                        temperature: 0.9,
-                                        topK: 1,
-                                        topP: 1,
-                                        maxOutputTokens: 8192,
+                                        temperature: 0.7,
+                                        topK: 40,
+                                        topP: 0.95,
+                                        maxOutputTokens: 16384,
                                     }
                                 })
                             });
@@ -382,7 +408,9 @@ export default function GenerateTrip() {
             padding: 25,
             paddingTop: 75,
             backgroundColor: Colors.WHITE,
-            height: '100%'
+            height: '100%',
+            justifyContent: 'center',
+            alignItems: 'center'
         }}>
             <Text style={{
                 fontFamily: 'outfit-bold',
@@ -391,30 +419,33 @@ export default function GenerateTrip() {
             }}>
                 Please Wait...
             </Text>
-            <Text style={{
-                fontFamily: 'outfit-medium',
-                fontSize: 20,
-                textAlign: 'center',
-                marginTop: 40
-            }}>
-                We are working to generate your dream trip
-            </Text>
 
             <Image source={require('./../../assets/images/plane.gif')}
                 style={{
                     width: '100%',
                     height: 200,
-                    objectFit: 'contain'
+                    objectFit: 'contain',
+                    marginVertical: 30
                 }}
-
             />
+
+            <Text style={{
+                fontFamily: 'outfit-medium',
+                fontSize: 22,
+                textAlign: 'center',
+                color: Colors.PRIMARY,
+                marginBottom: 20
+            }}>
+                {loadingMessage}
+            </Text>
 
             <Text style={{
                 fontFamily: 'outfit',
                 color: Colors.GRAY,
-                fontSize: 20,
-                textAlign: 'center'
-            }}>Do not Go Back</Text>
+                fontSize: 16,
+                textAlign: 'center',
+                marginTop: 20
+            }}>Do not go back</Text>
         </View>
     )
 }
