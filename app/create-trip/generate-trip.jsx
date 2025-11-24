@@ -136,12 +136,23 @@ export default function GenerateTrip() {
             // Create fresh session to avoid any cached model references
             const freshChatSession = await createFreshChatSession();
             
+            // Format activity preferences as a readable string
+            const activityPreferencesText = tripData?.activityPreferences?.length > 0 
+                ? tripData.activityPreferences.join(', ')
+                : 'No specific preferences';
+            
+            const activityCostPreferenceText = tripData?.activityCostPreference || 'mixed';
+            const dailyBudgetAmount = tripData?.dailyBudget || 150; // Default to $150 if not set
+            
             const FINAL_PROMPT = AI_PROMPT
                 .replace('{location}', tripData?.locationInfo?.name)
                 .replace('{totalDays}', tripData.totalNoOfDays)
                 .replace('{totalNight}', tripData.totalNoOfDays - 1)
                 .replace('{traveler}', tripData.traveler?.title)
                 .replace('{budget}', tripData.budget)
+                .replace('{activityPreferences}', activityPreferencesText)
+                .replace('{activityCostPreference}', activityCostPreferenceText)
+                .replace(/{dailyBudget}/g, dailyBudgetAmount) // Replace all occurrences
                 .replace('{totalDays}', tripData.totalNoOfDays)
                 .replace('{totalNight}', tripData.totalNoOfDays - 1);
 

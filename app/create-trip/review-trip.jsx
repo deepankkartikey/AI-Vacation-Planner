@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native'
+import { View, Text, TouchableOpacity, ScrollView } from 'react-native'
 import React, { useEffect } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import {Colors} from './../../constants/Colors'
@@ -22,12 +22,17 @@ export default function ReviewTrip() {
 
     // 📍📆🗓️🚌💰
     return (
-    <View style={{
+    <ScrollView style={{
+        flex: 1,
+        backgroundColor:Colors.WHITE
+    }}
+    contentContainerStyle={{
+        paddingBottom: 50
+    }}>
+      <View style={{
         padding:25,
         paddingTop:75,
-        backgroundColor:Colors.WHITE,
-        height:'100%'
-    }}>
+      }}>
       <Text style={{
         fontFamily:'outfit-bold',
         fontSize:35,
@@ -138,11 +143,70 @@ export default function ReviewTrip() {
         <Text style={{
             fontFamily:'outfit-medium',
             fontSize:20
-        }}>{tripData?.budget}
+        }}>{tripData?.budget} (${tripData?.dailyBudget}/day)
         </Text>
 
       </View>
       </View>
+
+      {/* Activity Preferences Info  */}
+      {tripData?.activityPreferences && tripData.activityPreferences.length > 0 && (
+        <View style={{
+          marginTop:25,
+          display:'flex',
+          flexDirection:'row',
+          gap:20
+        }}>
+          <Text style={{
+            fontSize:30
+          }}>🎯</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{
+                fontFamily:'outfit',
+                fontSize:17,
+                color:Colors.GRAY
+            }}>Activity Interests</Text>
+            <Text style={{
+                fontFamily:'outfit-medium',
+                fontSize:16,
+                marginTop: 5
+            }}>
+              {tripData.activityPreferences.map(activity => 
+                activity.charAt(0).toUpperCase() + activity.slice(1)
+              ).join(', ')}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {/* Cost Preference Info  */}
+      {tripData?.activityCostPreference && (
+        <View style={{
+          marginTop:25,
+          display:'flex',
+          flexDirection:'row',
+          gap:20
+        }}>
+          <Text style={{
+            fontSize:30
+          }}>💳</Text>
+          <View>
+            <Text style={{
+                fontFamily:'outfit',
+                fontSize:17,
+                color:Colors.GRAY
+            }}>Activity Cost</Text>
+            <Text style={{
+                fontFamily:'outfit-medium',
+                fontSize:20
+            }}>
+              {tripData.activityCostPreference === 'free' && '🆓 Free Activities Only'}
+              {tripData.activityCostPreference === 'mixed' && '💳 Mix of Free & Paid'}
+              {tripData.activityCostPreference === 'premium' && '💎 Premium Experiences'}
+            </Text>
+          </View>
+        </View>
+      )}
       
       </View>
 
@@ -164,7 +228,7 @@ export default function ReviewTrip() {
             Build My trip</Text>
      
       </TouchableOpacity>
-
-    </View>
+      </View>
+    </ScrollView>
   )
 }

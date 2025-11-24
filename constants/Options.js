@@ -36,25 +36,48 @@ export const SelectBudgetOptions=[
         title:'Cheap',
         desc:'Stay conscious of costs',
         icon:'💵',
+        range:'$50-100 per day'
     },
     {
         id:2,
         title:'Moderate',
         desc:'Keep cost on the average side',
         icon:'💰',
+        range:'$100-300 per day'
     },
     {
         id:3,
         title:'Luxury',
         desc:'Dont worry about cost',
         icon:'💸',
+        range:'$300+ per day'
     },
 ]
 
-export const AI_PROMPT=`Generate a comprehensive travel plan for Location: {location}, for {totalDays} Days and {totalNight} Night for {traveler} with a {budget} budget. 
+export const AI_PROMPT=`Generate a comprehensive and detailed travel plan for Location: {location}, for {totalDays} Days and {totalNight} Night for {traveler} with a {budget} budget ({dailyBudget} USD per person per day).
 
-Please provide the response in valid JSON format with the following structure:
+**Activity Preferences**: {activityPreferences}
+**Activity Cost Preference**: {activityCostPreference}
+**Daily Budget Per Person**: {dailyBudget} USD
 
+IMPORTANT INSTRUCTIONS:
+1. Provide REAL, well-researched recommendations specific to {location}
+2. Include accurate pricing in local currency with USD equivalent
+3. **ALL pricing must fit within the daily budget of {dailyBudget} USD per person**
+4. **PRIORITIZE activities that match these preferences: {activityPreferences}**
+5. **RESPECT the cost preference: {activityCostPreference}**
+   - If "free": Focus on free/low-cost activities, public spaces, free museums
+   - If "mixed": Balance 50/50 between free and paid activities
+   - If "premium": Focus on premium paid experiences, tours, special access
+6. Consider the traveler type ({traveler}) when suggesting activities
+7. Respect the {budget} budget level and {dailyBudget} USD daily limit in all recommendations
+8. Include practical details like opening hours, best time to visit, and travel times
+9. Provide diverse activities within the preferred categories
+10. **CRITICAL**: Return ONLY valid, complete JSON - NO markdown, NO explanations, NO truncation
+11. **CRITICAL**: Keep descriptions concise (max 2-3 sentences per item) to fit token limits
+12. **CRITICAL**: Ensure JSON is properly closed with all brackets and braces
+
+JSON Structure Required:
 {
   "travelPlan": {
     "location": "{location}",
