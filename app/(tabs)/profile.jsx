@@ -2,13 +2,15 @@ import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Alert, Acti
 import React, { useState, useEffect } from 'react'
 import { Colors } from '../../constants/Colors'
 import { auth } from '../../configs/FirebaseConfig'
-import { onAuthStateChanged } from 'firebase/auth'
+import { onAuthStateChanged, signOut } from 'firebase/auth'
 import ProfileService from '../../services/ProfileService'
 import * as ImagePicker from 'expo-image-picker'
 import { Ionicons } from '@expo/vector-icons'
 import AvatarInitials from '../../components/Profile/AvatarInitials'
+import { useRouter } from 'expo-router'
 
 export default function Profile() {
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
@@ -201,6 +203,33 @@ export default function Profile() {
       console.error('Error updating notification:', error)
       Alert.alert('Error', 'Failed to update notification setting')
     }
+  }
+
+  const handleLogout = async () => {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await signOut(auth)
+              router.replace('/auth/sign-in')
+            } catch (error) {
+              console.error('Error signing out:', error)
+              Alert.alert('Error', 'Failed to sign out. Please try again.')
+            }
+          },
+        },
+      ],
+      { cancelable: true }
+    )
   }
 
   if (loading) {
@@ -590,6 +619,15 @@ export default function Profile() {
         )}
       </View>
 
+      {/* Logout Button */}
+      <View style={styles.logoutSection}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Ionicons name="log-out-outline" size={20} color={Colors.RED} />
+          <Text style={styles.logoutButtonText}>Sign Out</Text>
+        </TouchableOpacity>
+        <Text style={styles.logoutHint}>You'll be signed out of your account</Text>
+      </View>
+
       <View style={styles.bottomPadding} />
     </ScrollView>
   )
@@ -975,6 +1013,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: Colors.PRIMARY,
     fontWeight: '500',
+  },
+  logoutSection: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.RED,
+    backgroundColor: Colors.WHITE,
+    minWidth: 150,
+  },
+  logoutButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.RED,
+  },
+  logoutHint: {
+    fontSize: 12,
+    color: Colors.GRAY,
+    marginTop: 8,
+    textAlign: 'center',
   },
   bottomPadding: {
     height: 30,
