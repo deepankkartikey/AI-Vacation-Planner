@@ -76,7 +76,12 @@ export default function PlannedTrip({details, imageRefs, tripId}) {
       </ScrollView>
 
      
-      {details && Object.entries(details).reverse().map(([day,dayDetails],dayIndex)=>{
+      {details && Object.entries(details).sort((a, b) => {
+        // Extract day numbers from strings like "day1", "day2", etc.
+        const dayNumA = parseInt(a[0].replace(/[^0-9]/g, '')) || 0;
+        const dayNumB = parseInt(b[0].replace(/[^0-9]/g, '')) || 0;
+        return dayNumA - dayNumB; // Sort in ascending order
+      }).map(([day,dayDetails],dayIndex)=>{
         // Filter places for this day
         const filteredPlaces = dayDetails?.plan?.filter(filterPlace) || [];
         
