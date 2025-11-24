@@ -12,7 +12,7 @@ export default function OptionCard({option,selectedOption}) {
         backgroundColor:Colors.LIGHT_GRAY,
         borderRadius:15
     },selectedOption?.id==option?.id&&{borderWidth:3}]}>
-        <View>
+        <View style={{ flex: 1 }}>
                 <Text style={{
                     fontSize:20,
                     fontFamily:'outfit-bold'
@@ -22,6 +22,14 @@ export default function OptionCard({option,selectedOption}) {
                     fontFamily:'outfit',
                     color:Colors.GRAY
                 }}>{option?.desc}</Text>
+                {option?.range && (
+                    <Text style={{
+                        fontSize:15,
+                        fontFamily:'outfit-medium',
+                        color:Colors.PRIMARY,
+                        marginTop:5
+                    }}>{option.range}</Text>
+                )}
         </View>
         <Text style={{
             fontSize:35
