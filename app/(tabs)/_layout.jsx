@@ -11,7 +11,7 @@ export default function TabLayout() {
     }}>
         <Tabs.Screen name="mytrip"
           options={{
-            tabBarLabel:'My Trip',
+            tabBarLabel:'My Trips',
             tabBarIcon:({color})=><Ionicons name="location-sharp" 
             size={24} color={color} />
           }}
