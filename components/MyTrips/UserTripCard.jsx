@@ -226,6 +226,33 @@ export default function UserTripCard({trip, onDelete}) {
                                 fontSize: 14,
                                 color: Colors.GRAY
                             }}>Traveling: {tripData?.traveler?.title || 'Solo'}</Text>
+                            
+                            {/* Enhancement status badge */}
+                            {trip?.isEnhanced === false && (
+                                <View style={{
+                                    backgroundColor: Colors.PRIMARY + '20',
+                                    paddingHorizontal: 8,
+                                    paddingVertical: 4,
+                                    borderRadius: 8,
+                                    marginTop: 5,
+                                    alignSelf: 'flex-start',
+                                    flexDirection: 'row',
+                                    alignItems: 'center'
+                                }}>
+                                    <View style={{
+                                        width: 6,
+                                        height: 6,
+                                        borderRadius: 3,
+                                        backgroundColor: Colors.PRIMARY,
+                                        marginRight: 5
+                                    }} />
+                                    <Text style={{
+                                        fontFamily: 'outfit',
+                                        fontSize: 11,
+                                        color: Colors.PRIMARY
+                                    }}>Enhancing...</Text>
+                                </View>
+                            )}
                         </View>
                     </TouchableOpacity>
                 </Animated.View>

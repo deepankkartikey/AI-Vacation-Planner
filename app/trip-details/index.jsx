@@ -1,4 +1,4 @@
-import { View, Text, Image, ScrollView } from 'react-native'
+import { View, Text, Image, ScrollView, ActivityIndicator } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useNavigation } from 'expo-router'
 import { Colors } from '../../constants/Colors';
@@ -6,11 +6,15 @@ import moment from 'moment'
 import FlightInfo from '../../components/TripDetails/FlightInfo';
 import HotelList from '../../components/TripDetails/HotelList';
 import PlannedTrip from '../../components/TripDetails/PlannedTrip';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '../../configs/FirebaseConfig';
+
 export default function TripDetails() {
 
     const navigation=useNavigation();
     const {trip}=useLocalSearchParams();
     const [tripDetails,setTripDetails]=useState(null);
+    const [isEnhancing, setIsEnhancing] = useState(false);
 
     const formatData=(data)=>{
         try {
@@ -20,6 +24,7 @@ export default function TripDetails() {
             return {};
         }
     }
+    
     useEffect(()=>{
         navigation.setOptions({
             headerShown:true,
@@ -29,7 +34,46 @@ export default function TripDetails() {
 
         if (trip) {
             try {
-                setTripDetails(JSON.parse(trip));
+                const parsedTrip = JSON.parse(trip);
+                setTripDetails(parsedTrip);
+                
+                // Check if trip is still being enhanced
+                if (parsedTrip.isEnhanced === false && parsedTrip.docId) {
+                    setIsEnhancing(true);
+                    console.log('🎨 Trip is being enhanced, setting up real-time listener...');
+                    
+                    // Set up real-time listener for this trip document
+                    const unsubscribe = onSnapshot(
+                        doc(db, 'UserTrips', parsedTrip.docId),
+                        (docSnapshot) => {
+                            if (docSnapshot.exists()) {
+                                const updatedTrip = docSnapshot.data();
+                                console.log('🔄 Trip document updated:', {
+                                    isEnhanced: updatedTrip.isEnhanced,
+                                    hasImages: !!updatedTrip.imageRefs
+                                });
+                                
+                                setTripDetails(updatedTrip);
+                                
+                                // Stop listening once enhancement is complete
+                                if (updatedTrip.isEnhanced === true) {
+                                    console.log('✅ Enhancement complete! Updated UI.');
+                                    setIsEnhancing(false);
+                                }
+                            }
+                        },
+                        (error) => {
+                            console.error('❌ Error listening to trip updates:', error);
+                            setIsEnhancing(false);
+                        }
+                    );
+                    
+                    // Cleanup listener on unmount
+                    return () => {
+                        console.log('🧹 Cleaning up trip listener');
+                        unsubscribe();
+                    };
+                }
             } catch (error) {
                 console.log('Error parsing trip details:', error);
                 setTripDetails(null);
@@ -77,6 +121,35 @@ export default function TripDetails() {
             borderTopLeftRadius:30,
             borderTopRightRadius:30
         }}>
+            {/* Enhancement in progress banner */}
+            {isEnhancing && (
+                <View style={{
+                    backgroundColor: Colors.PRIMARY + '20',
+                    padding: 12,
+                    borderRadius: 10,
+                    marginBottom: 15,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderWidth: 1,
+                    borderColor: Colors.PRIMARY
+                }}>
+                    <ActivityIndicator size="small" color={Colors.PRIMARY} style={{ marginRight: 10 }} />
+                    <View style={{ flex: 1 }}>
+                        <Text style={{
+                            fontFamily: 'outfit-medium',
+                            fontSize: 14,
+                            color: Colors.PRIMARY
+                        }}>Enhancing your trip...</Text>
+                        <Text style={{
+                            fontFamily: 'outfit',
+                            fontSize: 12,
+                            color: Colors.GRAY,
+                            marginTop: 2
+                        }}>Adding detailed descriptions, pricing, and images</Text>
+                    </View>
+                </View>
+            )}
+            
             <Text style={{
                 fontSize:25,
                 fontFamily:'outfit-bold'
