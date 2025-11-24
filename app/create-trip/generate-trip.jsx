@@ -2,7 +2,7 @@ import { View, Text, Image } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import { Colors } from '../../constants/Colors'
 import { CreateTripContext } from '../../context/CreateTripContext'
-import { AI_PROMPT } from '../../constants/Options';
+import { AI_SKELETON_PROMPT, AI_DETAIL_PROMPT } from '../../constants/Options';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { useRouter } from 'expo-router';
 import { doc, setDoc } from 'firebase/firestore';
@@ -14,26 +14,31 @@ export default function GenerateTrip() {
     const { tripData, setTripData } = useContext(CreateTripContext);
     const [loading, setLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('Finding places for you...');
+    const [generationPhase, setGenerationPhase] = useState('skeleton'); // 'skeleton' or 'details'
     const router = useRouter();
     
     // Loading messages to rotate through
-    const loadingMessages = [
+    const skeletonMessages = [
         'Finding places for you...',
-        'Searching destinations...',
-        'Collecting data...',
-        'Generating itinerary...',
-        'Planning activities...',
-        'Finding best hotels...',
-        'Creating your perfect trip...'
+        'Planning your days...',
+        'Creating itinerary structure...',
+    ];
+    
+    const detailMessages = [
+        'Adding detailed descriptions...',
+        'Finding ticket prices...',
+        'Getting location details...',
+        'Polishing your trip...',
     ];
     
     useEffect(() => {
-        // Rotate loading messages every 5 seconds
+        // Rotate loading messages every 3 seconds
         let messageIndex = 0;
         const messageInterval = setInterval(() => {
-            messageIndex = (messageIndex + 1) % loadingMessages.length;
-            setLoadingMessage(loadingMessages[messageIndex]);
-        }, 5000);
+            const messages = generationPhase === 'skeleton' ? skeletonMessages : detailMessages;
+            messageIndex = (messageIndex + 1) % messages.length;
+            setLoadingMessage(messages[messageIndex]);
+        }, 3000);
         
         // Add small delay to ensure auth state is ready
         const timer = setTimeout(() => {
@@ -159,247 +164,261 @@ export default function GenerateTrip() {
         setLoading(true);
         
         try {
-            // Create fresh session to avoid any cached model references
-            const freshChatSession = await createFreshChatSession();
+            // PHASE 1: Generate Quick Skeleton
+            console.log('🚀 PHASE 1: Generating quick skeleton...');
+            setGenerationPhase('skeleton');
+            setLoadingMessage('Creating itinerary structure...');
             
-            // Format activity preferences as a readable string
-            const activityPreferencesText = tripData?.activityPreferences?.length > 0 
-                ? tripData.activityPreferences.join(', ')
-                : 'No specific preferences';
+            const skeletonTrip = await generateSkeleton();
+            console.log('✅ Skeleton generated successfully');
             
-            const activityCostPreferenceText = tripData?.activityCostPreference || 'mixed';
-            const dailyBudgetAmount = tripData?.dailyBudget || 150; // Default to $150 if not set
-            
-            const FINAL_PROMPT = AI_PROMPT
-                .replace('{location}', tripData?.locationInfo?.name)
-                .replace('{totalDays}', tripData.totalNoOfDays)
-                .replace('{totalNight}', tripData.totalNoOfDays - 1)
-                .replace('{traveler}', tripData.traveler?.title)
-                .replace('{budget}', tripData.budget)
-                .replace('{activityPreferences}', activityPreferencesText)
-                .replace('{activityCostPreference}', activityCostPreferenceText)
-                .replace(/{dailyBudget}/g, dailyBudgetAmount) // Replace all occurrences
-                .replace('{totalDays}', tripData.totalNoOfDays)
-                .replace('{totalNight}', tripData.totalNoOfDays - 1);
-
-            console.log('🚀 Sending prompt to Gemini:', FINAL_PROMPT);
-
-            const result = await freshChatSession.sendMessage(FINAL_PROMPT);
-            console.log('✅ Gemini response received');
-            
-            const responseText = result.response.text();
-            console.log('📄 Raw response length:', responseText.length);
-            console.log('📄 Raw response preview:', responseText.substring(0, 300) + '...');
-            
-            // Clean the response text more thoroughly
-            let cleanText = responseText.trim();
-            
-            // Remove markdown code blocks
-            cleanText = cleanText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-            
-            // Remove any leading/trailing whitespace and newlines
-            cleanText = cleanText.trim();
-            
-            // Better JSON extraction - find the complete JSON object
-            const jsonStart = cleanText.indexOf('{');
-            if (jsonStart !== -1) {
-                // Extract from the first { to the end, then we'll validate it's complete JSON
-                let jsonCandidate = cleanText.substring(jsonStart);
-                
-                // Try to find the matching closing brace by counting braces
-                let braceCount = 0;
-                let jsonEnd = -1;
-                
-                for (let i = 0; i < jsonCandidate.length; i++) {
-                    if (jsonCandidate[i] === '{') {
-                        braceCount++;
-                    } else if (jsonCandidate[i] === '}') {
-                        braceCount--;
-                        if (braceCount === 0) {
-                            jsonEnd = i;
-                            break;
-                        }
-                    }
-                }
-                
-                if (jsonEnd !== -1) {
-                    cleanText = jsonCandidate.substring(0, jsonEnd + 1);
-                } else {
-                    // Fallback - use the whole text from first { onwards
-                    cleanText = jsonCandidate;
-                }
-            }
-            
-            console.log('🧹 Cleaned response length:', cleanText.length);
-            console.log('🧹 Cleaned response preview:', cleanText.substring(0, 300) + '...');
-            console.log('🧹 Cleaned response end:', '...' + cleanText.substring(cleanText.length - 100));
-            
-            // Validate JSON before parsing
-            if (!cleanText.startsWith('{')) {
-                console.error('❌ Invalid JSON format - does not start with brace');
-                throw new Error('Invalid JSON format received from AI');
-            }
-            
-            // If JSON doesn't end with }, try to fix truncated JSON
-            if (!cleanText.endsWith('}')) {
-                console.warn('⚠️ JSON appears truncated. Attempting to fix...');
-                console.log('🔍 Original length:', cleanText.length);
-                console.log('🔍 Last 200 characters:', cleanText.substring(cleanText.length - 200));
-                
-                // Try to close incomplete JSON structures
-                let fixedText = cleanText;
-                
-                // Count open braces and brackets to see what's missing
-                let braceCount = 0;
-                let bracketCount = 0;
-                let inString = false;
-                let escapeNext = false;
-                
-                for (let i = 0; i < fixedText.length; i++) {
-                    const char = fixedText[i];
-                    
-                    if (escapeNext) {
-                        escapeNext = false;
-                        continue;
-                    }
-                    
-                    if (char === '\\') {
-                        escapeNext = true;
-                        continue;
-                    }
-                    
-                    if (char === '"' && !escapeNext) {
-                        inString = !inString;
-                        continue;
-                    }
-                    
-                    if (!inString) {
-                        if (char === '{') braceCount++;
-                        else if (char === '}') braceCount--;
-                        else if (char === '[') bracketCount++;
-                        else if (char === ']') bracketCount--;
-                    }
-                }
-                
-                // If we're in a string, close it
-                if (inString) {
-                    fixedText += '"';
-                }
-                
-                // Close any open brackets
-                for (let i = 0; i < bracketCount; i++) {
-                    fixedText += ']';
-                }
-                
-                // Close any open braces
-                for (let i = 0; i < braceCount; i++) {
-                    fixedText += '}';
-                }
-                
-                cleanText = fixedText;
-                console.log('🔧 Fixed JSON length:', cleanText.length);
-                console.log('🔧 Fixed JSON ends with:', cleanText.substring(cleanText.length - 10));
-            }
-            
-            // Additional validation - try to parse first to catch syntax errors
-            try {
-                JSON.parse(cleanText);
-            } catch (parseError) {
-                console.error('❌ JSON syntax error:', parseError.message);
-                console.log('🔍 Problematic JSON length:', cleanText.length);
-                console.log('🔍 JSON starts with:', cleanText.substring(0, 100));
-                console.log('🔍 JSON ends with:', cleanText.substring(cleanText.length - 100));
-                throw new Error(`JSON parsing failed: ${parseError.message}`);
-            }
-            
-            const tripResp = JSON.parse(cleanText);
-            console.log('✅ Trip data parsed successfully');
-            
-            // Debug user authentication status
+            // Save skeleton immediately so user can see it
+            const docId = (Date.now()).toString();
             const currentUser = auth.currentUser;
-            console.log('👤 Current user status:', {
-                uid: currentUser?.uid,
-                email: currentUser?.email,
-                isAuthenticated: !!currentUser
-            });
             
             if (!currentUser) {
                 throw new Error('User not authenticated. Please sign in again.');
             }
             
-            const docId = (Date.now()).toString();
-            console.log('💾 Saving trip immediately (images will load in background)...');
+            const skeletonDocument = {
+                userEmail: currentUser.email,
+                tripPlan: skeletonTrip,
+                tripData: JSON.stringify(tripData),
+                imageRefs: {},
+                docId: docId,
+                createdAt: new Date().toISOString(),
+                userId: currentUser.uid,
+                isEnhanced: false // Flag to show this is just skeleton
+            };
             
-            try {
-                // Save trip immediately with empty imageRefs
-                const tripDocument = {
-                    userEmail: currentUser.email,
-                    tripPlan: tripResp,// AI Result 
-                    tripData: JSON.stringify(tripData),//User Selection Data
-                    imageRefs: {}, // Empty for now - will update in background
-                    docId: docId,
-                    createdAt: new Date().toISOString(),
-                    userId: currentUser.uid
-                };
-                
-                await setDoc(doc(db, "UserTrips", docId), tripDocument);
-                console.log('✅ Trip saved to Firebase successfully');
-                
-                // Navigate immediately - don't wait for images
-                router.push('(tabs)/mytrip');
-                
-                // Fetch images in background and update the trip document
-                console.log('📸 Fetching images in background...');
-                fetchTripImages(tripResp, tripData?.locationInfo?.name)
-                    .then(async (imageRefs) => {
-                        console.log('✅ Background images fetched, updating trip...');
-                        await setDoc(doc(db, "UserTrips", docId), {
-                            ...tripDocument,
-                            imageRefs: imageRefs
-                        });
-                        console.log('✅ Trip updated with images');
-                    })
-                    .catch(err => console.log('⚠️ Background image fetch failed:', err.message));
-                
-                // Update user stats (don't wait for it - run in background)
-                ProfileService.incrementTripCount(currentUser.uid, tripDocument)
-                    .then(() => console.log('✅ User stats updated'))
-                    .catch(err => console.log('⚠️ Stats update failed (non-critical):', err.message));
-                
-            } catch (firestoreError) {
-                console.error('❌ Firestore save error:', firestoreError);
-                console.error('❌ Error code:', firestoreError.code);
-                console.error('❌ Error message:', firestoreError.message);
-                
-                // Try alternative approach - let user know about the error but still show success
-                alert('Trip generated successfully! However, there was an issue saving to your account. Please try again or contact support.');
-                router.push('(tabs)/mytrip');
-            }
+            await setDoc(doc(db, "UserTrips", docId), skeletonDocument);
+            console.log('✅ Skeleton saved to Firebase');
             
+            // Navigate to trip page immediately with skeleton
+            router.push('(tabs)/mytrip');
+            
+            // PHASE 2: Enhance with details in background
+            console.log('🎨 PHASE 2: Enhancing with details (background)...');
+            setGenerationPhase('details');
+            setLoadingMessage('Adding detailed information...');
+            
+            enhanceWithDetails(skeletonTrip, docId, skeletonDocument)
+                .then(() => console.log('✅ Details enhancement complete'))
+                .catch(err => console.log('⚠️ Detail enhancement failed (non-critical):', err.message));
+            
+            // Update user stats in background
+            ProfileService.incrementTripCount(currentUser.uid, skeletonDocument)
+                .then(() => console.log('✅ User stats updated'))
+                .catch(err => console.log('⚠️ Stats update failed (non-critical):', err.message));
+                
         } catch (error) {
             console.error('❌ Error generating trip:', error);
-            
-            if (error.message.includes('QUOTA_EXCEEDED') || error.message.includes('quota')) {
-                alert('API quota exceeded. Please try again later or contact support for a new API key.');
-            } else if (error.message.includes('API_KEY')) {
-                alert('Invalid API key. Please check your Gemini API configuration.');
-            } else if (error.message.includes('models/') && error.message.includes('not found')) {
-                alert('The AI model is temporarily unavailable. Please try again in a few minutes.');
-            } else if (error.message.includes('404')) {
-                alert('AI service is temporarily unavailable. Please try again later.');
-            } else if (error.name === 'SyntaxError') {
-                console.error('❌ JSON parsing error - invalid response format');
-                alert('Received invalid response from AI. Please try again.');
-            } else {
-                console.error('❌ Full error details:', {
-                    name: error.name,
-                    message: error.message,
-                    stack: error.stack
-                });
-                alert('Failed to generate trip. Please check your internet connection and try again.');
-            }
+            handleGenerationError(error);
         } finally {
             setLoading(false);
+        }
+    }
+
+    const generateSkeleton = async () => {
+        const freshChatSession = await createFreshChatSession();
+        
+        // Format activity preferences
+        const activityPreferencesText = tripData?.activityPreferences?.length > 0 
+            ? tripData.activityPreferences.join(', ')
+            : 'No specific preferences';
+        
+        const activityCostPreferenceText = tripData?.activityCostPreference || 'mixed';
+        const dailyBudgetAmount = tripData?.dailyBudget || 150;
+        
+        const SKELETON_PROMPT = AI_SKELETON_PROMPT
+            .replace('{location}', tripData?.locationInfo?.name)
+            .replace('{totalDays}', tripData.totalNoOfDays)
+            .replace('{totalNight}', tripData.totalNoOfDays - 1)
+            .replace('{traveler}', tripData.traveler?.title)
+            .replace('{budget}', tripData.budget)
+            .replace('{activityPreferences}', activityPreferencesText)
+            .replace('{activityCostPreference}', activityCostPreferenceText)
+            .replace(/{dailyBudget}/g, dailyBudgetAmount);
+
+        console.log('📝 Skeleton prompt ready');
+        
+        const result = await freshChatSession.sendMessage(SKELETON_PROMPT);
+        const responseText = result.response.text();
+        
+        console.log('📄 Skeleton response length:', responseText.length);
+        
+        const cleanedJSON = cleanAndParseJSON(responseText);
+        return cleanedJSON;
+    }
+
+    const enhanceWithDetails = async (skeleton, docId, originalDocument) => {
+        try {
+            const freshChatSession = await createFreshChatSession();
+            
+            // Format activity preferences
+            const activityPreferencesText = tripData?.activityPreferences?.length > 0 
+                ? tripData.activityPreferences.join(', ')
+                : 'No specific preferences';
+            
+            const activityCostPreferenceText = tripData?.activityCostPreference || 'mixed';
+            const dailyBudgetAmount = tripData?.dailyBudget || 150;
+            
+            const DETAIL_PROMPT = AI_DETAIL_PROMPT
+                .replace('{skeleton}', JSON.stringify(skeleton, null, 2))
+                .replace('{location}', tripData?.locationInfo?.name)
+                .replace('{traveler}', tripData.traveler?.title)
+                .replace(/{dailyBudget}/g, dailyBudgetAmount)
+                .replace('{activityPreferences}', activityPreferencesText)
+                .replace('{activityCostPreference}', activityCostPreferenceText);
+
+            console.log('� Detail enhancement prompt ready');
+            
+            const result = await freshChatSession.sendMessage(DETAIL_PROMPT);
+            const responseText = result.response.text();
+            
+            console.log('📄 Enhanced response length:', responseText.length);
+            
+            const enhancedTrip = cleanAndParseJSON(responseText);
+            
+            // Update document with enhanced details
+            await setDoc(doc(db, "UserTrips", docId), {
+                ...originalDocument,
+                tripPlan: enhancedTrip,
+                isEnhanced: true
+            });
+            
+            console.log('✅ Enhanced trip saved to Firebase');
+            
+            // Fetch images in background
+            fetchTripImages(enhancedTrip, tripData?.locationInfo?.name)
+                .then(async (imageRefs) => {
+                    await setDoc(doc(db, "UserTrips", docId), {
+                        ...originalDocument,
+                        tripPlan: enhancedTrip,
+                        imageRefs: imageRefs,
+                        isEnhanced: true
+                    });
+                    console.log('✅ Images added to trip');
+                })
+                .catch(err => console.log('⚠️ Image fetch failed:', err.message));
+                
+        } catch (error) {
+            console.error('❌ Error enhancing details:', error);
+            // Non-critical error - skeleton is already saved
+        }
+    }
+
+    const cleanAndParseJSON = (responseText) => {
+        // Clean the response text
+        let cleanText = responseText.trim();
+        
+        // Remove markdown code blocks
+        cleanText = cleanText.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        
+        // Remove any leading/trailing whitespace
+        cleanText = cleanText.trim();
+        
+        // Extract JSON object
+        const jsonStart = cleanText.indexOf('{');
+        if (jsonStart !== -1) {
+            let jsonCandidate = cleanText.substring(jsonStart);
+            
+            // Find matching closing brace
+            let braceCount = 0;
+            let jsonEnd = -1;
+            
+            for (let i = 0; i < jsonCandidate.length; i++) {
+                if (jsonCandidate[i] === '{') {
+                    braceCount++;
+                } else if (jsonCandidate[i] === '}') {
+                    braceCount--;
+                    if (braceCount === 0) {
+                        jsonEnd = i;
+                        break;
+                    }
+                }
+            }
+            
+            if (jsonEnd !== -1) {
+                cleanText = jsonCandidate.substring(0, jsonEnd + 1);
+            } else {
+                cleanText = jsonCandidate;
+            }
+        }
+        
+        console.log('🧹 Cleaned JSON length:', cleanText.length);
+        
+        // Validate and fix truncated JSON if needed
+        if (!cleanText.startsWith('{')) {
+            throw new Error('Invalid JSON format');
+        }
+        
+        if (!cleanText.endsWith('}')) {
+            console.warn('⚠️ JSON truncated, attempting to fix...');
+            cleanText = fixTruncatedJSON(cleanText);
+        }
+        
+        // Parse and return
+        try {
+            return JSON.parse(cleanText);
+        } catch (parseError) {
+            console.error('❌ JSON parse error:', parseError.message);
+            throw new Error(`JSON parsing failed: ${parseError.message}`);
+        }
+    }
+
+    const fixTruncatedJSON = (text) => {
+        let fixedText = text;
+        let braceCount = 0;
+        let bracketCount = 0;
+        let inString = false;
+        let escapeNext = false;
+        
+        for (let i = 0; i < fixedText.length; i++) {
+            const char = fixedText[i];
+            
+            if (escapeNext) {
+                escapeNext = false;
+                continue;
+            }
+            
+            if (char === '\\') {
+                escapeNext = true;
+                continue;
+            }
+            
+            if (char === '"' && !escapeNext) {
+                inString = !inString;
+                continue;
+            }
+            
+            if (!inString) {
+                if (char === '{') braceCount++;
+                else if (char === '}') braceCount--;
+                else if (char === '[') bracketCount++;
+                else if (char === ']') bracketCount--;
+            }
+        }
+        
+        // Close unclosed structures
+        if (inString) fixedText += '"';
+        for (let i = 0; i < bracketCount; i++) fixedText += ']';
+        for (let i = 0; i < braceCount; i++) fixedText += '}';
+        
+        return fixedText;
+    }
+
+    const handleGenerationError = (error) => {
+        if (error.message.includes('QUOTA_EXCEEDED') || error.message.includes('quota')) {
+            alert('API quota exceeded. Please try again later.');
+        } else if (error.message.includes('API_KEY')) {
+            alert('Invalid API key. Please check configuration.');
+        } else if (error.message.includes('not found')) {
+            alert('AI model temporarily unavailable. Please try again.');
+        } else if (error.name === 'SyntaxError') {
+            alert('Received invalid response from AI. Please try again.');
+        } else {
+            alert('Failed to generate trip. Please check your internet connection and try again.');
         }
     }
 
@@ -442,10 +461,12 @@ export default function GenerateTrip() {
             <Text style={{
                 fontFamily: 'outfit',
                 color: Colors.GRAY,
-                fontSize: 16,
+                fontSize: 14,
                 textAlign: 'center',
                 marginTop: 20
-            }}>Do not go back</Text>
+            }}>
+                {generationPhase === 'skeleton' ? 'Creating your trip...' : 'Adding details in background...'}
+            </Text>
         </View>
     )
 }

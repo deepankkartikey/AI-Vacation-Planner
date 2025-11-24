@@ -119,3 +119,104 @@ JSON Structure Required:
 }
 
 Make sure to provide actual recommendations for {location} with realistic prices and genuine place suggestions. Return ONLY valid JSON, no additional text.`
+
+// PHASE 1: Quick Skeleton Prompt (Fast - generates basic structure)
+export const AI_SKELETON_PROMPT=`Generate a QUICK itinerary skeleton for {location}, {totalDays} Days, {totalNight} Nights.
+
+**Trip Info:**
+- Travelers: {traveler}
+- Budget: {budget} ({dailyBudget} USD/day per person)
+- Activity Interests: {activityPreferences}
+- Cost Preference: {activityCostPreference}
+
+**IMPORTANT: Generate ONLY basic structure - NO detailed descriptions!**
+
+Return MINIMAL JSON with:
+1. Flight info (just basic details and estimated price)
+2. 2-3 hotel names with price range
+3. Daily itinerary with ONLY:
+   - Place names
+   - Time slots (morning/afternoon/evening)
+   - Activity category
+   - Estimated cost range
+
+**CRITICAL**: 
+- Keep it SHORT - aim for 2000 tokens max
+- NO detailed descriptions
+- NO long explanations
+- ONLY place names, times, and basic info
+- Return ONLY valid JSON, no markdown
+
+JSON Format:
+{
+  "travelPlan": {
+    "location": "{location}",
+    "duration": "{totalDays} Days & {totalNight} Nights",
+    "travelers": "{traveler}",
+    "budget": "{budget}",
+    "flight": {
+      "details": "Basic flight info",
+      "price": "Estimated price range",
+      "bookingUrl": "https://www.google.com/flights"
+    },
+    "hotels": [
+      {
+        "hotelName": "Hotel Name",
+        "address": "Address",
+        "price": "Price range",
+        "rating": 4.5
+      }
+    ],
+    "itinerary": {
+      "day1": {
+        "theme": "Day theme/focus",
+        "plan": [
+          {
+            "time": "9:00 AM - 11:00 AM",
+            "placeName": "Place Name",
+            "category": "culture/food/nature/etc",
+            "estimatedCost": "$20-30"
+          }
+        ]
+      }
+    }
+  }
+}`
+
+// PHASE 2: Detail Enhancement Prompt (Enriches skeleton with full details)
+export const AI_DETAIL_PROMPT=`Enhance this trip itinerary with complete details:
+
+**Original Skeleton:**
+{skeleton}
+
+**Trip Context:**
+- Location: {location}
+- Travelers: {traveler}
+- Budget: {dailyBudget} USD/day
+- Preferences: {activityPreferences}
+- Cost Preference: {activityCostPreference}
+
+**Add the following details to EACH place:**
+1. 2-3 sentence description (concise!)
+2. Specific ticket pricing in USD
+3. Geo-coordinates [latitude, longitude]
+4. Place image URL suggestion
+5. Best time to visit
+6. Travel time from previous location
+7. Pro tips (1 sentence)
+
+**For Hotels:**
+- Full description (2 sentences)
+- Amenities
+- Geo-coordinates
+- Image URL
+
+**IMPORTANT:**
+- Keep descriptions SHORT (2-3 sentences max)
+- Use real places and accurate info for {location}
+- Respect the {dailyBudget} USD budget
+- Match activity preferences: {activityPreferences}
+- Return ONLY valid JSON, no markdown
+
+Return the COMPLETE enhanced JSON in the same structure as the skeleton, but with all details added.`
+
