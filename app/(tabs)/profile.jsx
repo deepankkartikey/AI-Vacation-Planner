@@ -622,7 +622,7 @@ export default function Profile() {
       {/* Logout Button */}
       <View style={styles.logoutSection}>
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Ionicons name="log-out-outline" size={20} color={Colors.RED} />
+          <Ionicons name="log-out-outline" size={20} color="#DC2626" />
           <Text style={styles.logoutButtonText}>Sign Out</Text>
         </TouchableOpacity>
         <Text style={styles.logoutHint}>You'll be signed out of your account</Text>
@@ -1016,6 +1016,7 @@ const styles = StyleSheet.create({
   },
   logoutSection: {
     padding: 20,
+    paddingBottom: 30,
     alignItems: 'center',
   },
   logoutButton: {
@@ -1027,14 +1028,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: Colors.RED,
+    borderColor: '#DC2626',
     backgroundColor: Colors.WHITE,
     minWidth: 150,
   },
   logoutButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.RED,
+    color: '#DC2626',
   },
   logoutHint: {
     fontSize: 12,
@@ -1043,6 +1044,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   bottomPadding: {
-    height: 30,
+    height: 100,
   },
 })

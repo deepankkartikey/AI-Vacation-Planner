@@ -127,24 +127,6 @@ export default function SignIn() {
           }}>Sign In</Text>
       </TouchableOpacity>
 
-      {/* Debug Test Button - Remove in production */}
-      <TouchableOpacity onPress={() => {
-        console.log('Testing Firebase auth object:', auth);
-        console.log('Current user:', auth?.currentUser);
-        showMessage('Check console for Firebase debug info');
-      }} style={{
-        padding:10,
-        backgroundColor:Colors.GRAY,
-        borderRadius:15,
-        marginTop:10
-      }}>
-          <Text style={{
-            color:Colors.WHITE,
-            textAlign:'center',
-            fontSize: 12
-          }}>Debug Firebase (Check Console)</Text>
-      </TouchableOpacity>
-
         {/* Create Account Button  */}
         <TouchableOpacity 
           onPress={()=>router.replace('auth/sign-up')}

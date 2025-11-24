@@ -4,6 +4,8 @@ import { useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
 import {CreateTripContext} from './../../context/CreateTripContext'
 import NewGooglePlacesSearch from '../../components/CreateTrip/NewGooglePlacesSearch';
+import { Ionicons } from '@expo/vector-icons';
+
 export default function SearchPlace() {
 
   const navigation=useNavigation();
@@ -11,9 +13,7 @@ export default function SearchPlace() {
   const router=useRouter();
   useEffect(()=>{
     navigation.setOptions({
-      headerShown:true,
-      headerTransparent:true,
-      headerTitle:'Search'
+      headerShown:false
     })
   },[]);
 
@@ -54,11 +54,26 @@ export default function SearchPlace() {
     <View 
     style={{
       padding:25,
-      paddingTop:75,
+      paddingTop:50,
       backgroundColor:Colors.WHITE,
       height:'100%'
     }}
     >
+      <TouchableOpacity 
+        onPress={() => {
+          // Check if there's a screen to go back to
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            // If no screen to go back to, navigate to mytrip tab
+            router.replace('/(tabs)/mytrip');
+          }
+        }}
+        style={{ marginBottom: 20 }}
+      >
+        <Ionicons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>
+
       <Text style={{
         fontSize: 25,
         fontFamily: 'outfit-bold',
@@ -80,34 +95,6 @@ export default function SearchPlace() {
         placeholder="Search for cities, countries, places..."
         onPlaceSelected={handlePlaceSelect}
       />
-      
-      {/* Debug Section - Remove in production */}
-      <View style={{ marginTop: 30, padding: 20, backgroundColor: Colors.LIGHT_GRAY, borderRadius: 10 }}>
-        <Text style={{ fontFamily: 'outfit-medium', fontSize: 16, marginBottom: 10 }}>
-          Debug Info:
-        </Text>
-        <Text style={{ fontFamily: 'outfit', fontSize: 14, color: Colors.GRAY }}>
-          Trip Data: {JSON.stringify(tripData, null, 2)}
-        </Text>
-        
-        <TouchableOpacity 
-          style={{
-            backgroundColor: Colors.PRIMARY,
-            padding: 10,
-            borderRadius: 5,
-            marginTop: 10,
-            alignItems: 'center'
-          }}
-          onPress={() => {
-            console.log('🧪 Testing manual navigation...');
-            router.push('/create-trip/select-traveler');
-          }}
-        >
-          <Text style={{ color: Colors.WHITE, fontFamily: 'outfit' }}>
-            Test Navigation
-          </Text>
-        </TouchableOpacity>
-      </View>
     </View>
   )
 }
