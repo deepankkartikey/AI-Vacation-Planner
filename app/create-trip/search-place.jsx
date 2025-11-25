@@ -1,20 +1,43 @@
-import { View, Text, TouchableOpacity } from 'react-native'
+import { View, Text, TouchableOpacity, Alert } from 'react-native'
 import React, { useContext, useEffect } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
 import {CreateTripContext} from './../../context/CreateTripContext'
 import NewGooglePlacesSearch from '../../components/CreateTrip/NewGooglePlacesSearch';
 import { Ionicons } from '@expo/vector-icons';
+import { auth } from '../../configs/FirebaseConfig';
 
 export default function SearchPlace() {
 
   const navigation=useNavigation();
   const {tripData,setTripData}=useContext(CreateTripContext);
   const router=useRouter();
+  
   useEffect(()=>{
     navigation.setOptions({
       headerShown:false
     })
+    
+    // Check if user is authenticated
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+      console.log('❌ User not authenticated - redirecting to sign in');
+      Alert.alert(
+        'Authentication Required',
+        'Please sign in to create a trip.',
+        [
+          {
+            text: 'Sign In',
+            onPress: () => router.replace('/auth/sign-in')
+          },
+          {
+            text: 'Cancel',
+            onPress: () => router.push('/(tabs)/mytrip'),
+            style: 'cancel'
+          }
+        ]
+      );
+    }
   },[]);
 
   useEffect(()=>{
