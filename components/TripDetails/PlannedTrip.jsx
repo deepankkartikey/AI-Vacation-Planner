@@ -1,10 +1,13 @@
-import { View, Text, TouchableOpacity, Image, ScrollView } from 'react-native'
-import React, { useState } from 'react'
-import PlaceCard from './PlaceCard';
+import { View, Text, StyleSheet, Image, ActivityIndicator, Alert, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
 import { Colors } from '../../constants/Colors';
+import PlaceCard from './PlaceCard';
+import { Ionicons } from '@expo/vector-icons';
+import { generateMorePlaces } from '../../services/PlaceGenerationService';
 
-export default function PlannedTrip({details, imageRefs, tripId}) {
+export default function PlannedTrip({ details, imageRefs, location, tripData, tripId }) {
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Activity type filters
   const filters = [
@@ -27,7 +30,48 @@ export default function PlannedTrip({details, imageRefs, tripId}) {
     return filter.keywords.some(keyword => placeText.includes(keyword));
   };
 
-  return (
+  // Handle loading more places for specific filter
+  const handleLoadMore = async () => {
+    if (loadingMore) return;
+    
+    const filter = filters.find(f => f.id === selectedFilter);
+    if (!filter || selectedFilter === 'all') {
+      Alert.alert('Info', 'Please select a specific filter to load more places');
+      return;
+    }
+
+    if (!tripId || !location) {
+      Alert.alert('Error', 'Trip information is missing. Please try again.');
+      return;
+    }
+
+    setLoadingMore(true);
+    
+    try {
+      console.log(`🚀 Loading more ${filter.label} for ${location}...`);
+      
+      const result = await generateMorePlaces(
+        tripId,
+        location,
+        selectedFilter,
+        filter.label,
+        tripData
+      );
+
+      if (result.success) {
+        console.log(`✅ Added ${result.placesAdded} new ${filter.label.toLowerCase()} to itinerary`);
+      }
+    } catch (error) {
+      console.error('❌ Load more error:', error);
+      Alert.alert(
+        'Error', 
+        error.message || 'Failed to load more places. Please try again.',
+        [{ text: 'OK' }]
+      );
+    } finally {
+      setLoadingMore(false);
+    }
+  };  return (
     <View style={{
         marginTop:20
     }}>
@@ -99,15 +143,33 @@ export default function PlannedTrip({details, imageRefs, tripId}) {
               }}>{day.charAt(0).toUpperCase()+day.slice(1)}</Text>
               
               {selectedFilter !== 'all' && filteredPlaces.length === 0 && (
-                <Text style={{
-                  fontFamily: 'outfit',
-                  fontSize: 14,
-                  color: Colors.GRAY,
+                <View style={{
+                  backgroundColor: Colors.LIGHT_GRAY,
+                  padding: 15,
+                  borderRadius: 10,
                   marginTop: 10,
-                  fontStyle: 'italic'
+                  alignItems: 'center'
                 }}>
-                  No activities match this filter for {day}
-                </Text>
+                  <Ionicons name="search-outline" size={40} color={Colors.GRAY} />
+                  <Text style={{
+                    fontFamily: 'outfit-medium',
+                    fontSize: 16,
+                    color: Colors.GRAY,
+                    marginTop: 10,
+                    textAlign: 'center'
+                  }}>
+                    No {filters.find(f => f.id === selectedFilter)?.label} found for {day}
+                  </Text>
+                  <Text style={{
+                    fontFamily: 'outfit',
+                    fontSize: 14,
+                    color: Colors.GRAY,
+                    marginTop: 5,
+                    textAlign: 'center'
+                  }}>
+                    Try loading more recommendations
+                  </Text>
+                </View>
               )}
 
               {filteredPlaces.map((place, index) => {
@@ -127,6 +189,51 @@ export default function PlannedTrip({details, imageRefs, tripId}) {
           </View>
         );
       })}
+
+      {/* Load More Button - show when a specific filter is selected */}
+      {selectedFilter !== 'all' && (
+        <TouchableOpacity
+          onPress={handleLoadMore}
+          disabled={loadingMore}
+          style={{
+            backgroundColor: loadingMore ? Colors.LIGHT_GRAY : Colors.PRIMARY,
+            padding: 15,
+            borderRadius: 15,
+            marginTop: 20,
+            marginBottom: 20,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 10,
+            borderWidth: 1,
+            borderColor: Colors.PRIMARY,
+          }}
+        >
+          {loadingMore ? (
+            <>
+              <ActivityIndicator size="small" color={Colors.PRIMARY} />
+              <Text style={{
+                fontFamily: 'outfit-medium',
+                fontSize: 16,
+                color: Colors.PRIMARY
+              }}>
+                Generating...
+              </Text>
+            </>
+          ) : (
+            <>
+              <Ionicons name="add-circle-outline" size={24} color={Colors.WHITE} />
+              <Text style={{
+                fontFamily: 'outfit-medium',
+                fontSize: 16,
+                color: Colors.WHITE
+              }}>
+                Load More {filters.find(f => f.id === selectedFilter)?.label}
+              </Text>
+            </>
+          )}
+        </TouchableOpacity>
+      )}
       
     </View>
   )

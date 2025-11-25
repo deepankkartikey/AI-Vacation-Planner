@@ -37,10 +37,15 @@ export default function TripDetails() {
                 const parsedTrip = JSON.parse(trip);
                 setTripDetails(parsedTrip);
                 
-                // Check if trip is still being enhanced
-                if (parsedTrip.isEnhanced === false && parsedTrip.docId) {
-                    setIsEnhancing(true);
-                    console.log('🎨 Trip is being enhanced, setting up real-time listener...');
+                // Set up real-time listener for any trip with docId
+                if (parsedTrip.docId) {
+                    // Track enhancement status
+                    if (parsedTrip.isEnhanced === false) {
+                        setIsEnhancing(true);
+                        console.log('🎨 Trip is being enhanced, setting up real-time listener...');
+                    } else {
+                        console.log('👀 Setting up real-time listener for trip updates...');
+                    }
                     
                     // Set up real-time listener for this trip document
                     const unsubscribe = onSnapshot(
@@ -50,13 +55,14 @@ export default function TripDetails() {
                                 const updatedTrip = docSnapshot.data();
                                 console.log('🔄 Trip document updated:', {
                                     isEnhanced: updatedTrip.isEnhanced,
-                                    hasImages: !!updatedTrip.imageRefs
+                                    hasImages: !!updatedTrip.imageRefs,
+                                    itineraryDays: Object.keys(updatedTrip.tripPlan?.travelPlan?.itinerary || {}).length
                                 });
                                 
                                 setTripDetails(updatedTrip);
                                 
-                                // Stop listening once enhancement is complete
-                                if (updatedTrip.isEnhanced === true) {
+                                // Update enhancement status
+                                if (updatedTrip.isEnhanced === true && isEnhancing) {
                                     console.log('✅ Enhancement complete! Updated UI.');
                                     setIsEnhancing(false);
                                 }
@@ -199,6 +205,8 @@ export default function TripDetails() {
           details={tripDetails?.tripPlan?.travelPlan?.itinerary || {}} 
           imageRefs={tripDetails?.imageRefs}
           tripId={tripDetails?.docId}
+          location={tripDetails?.tripPlan?.travelPlan?.location}
+          tripData={formatData(tripDetails?.tripData)}
         />
         </View>
         </ScrollView>
