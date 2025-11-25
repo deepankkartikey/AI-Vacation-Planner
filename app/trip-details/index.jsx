@@ -1,6 +1,6 @@
-import { View, Text, Image, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { useLocalSearchParams, useNavigation } from 'expo-router'
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
 import moment from 'moment'
 import FlightInfo from '../../components/TripDetails/FlightInfo';
@@ -8,10 +8,12 @@ import HotelList from '../../components/TripDetails/HotelList';
 import PlannedTrip from '../../components/TripDetails/PlannedTrip';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '../../configs/FirebaseConfig';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function TripDetails() {
 
     const navigation=useNavigation();
+    const router=useRouter();
     const {trip}=useLocalSearchParams();
     const [tripDetails,setTripDetails]=useState(null);
     const [isEnhancing, setIsEnhancing] = useState(false);
@@ -27,9 +29,7 @@ export default function TripDetails() {
     
     useEffect(()=>{
         navigation.setOptions({
-            headerShown:true,
-            headerTransparent:true,
-            headerTitle:''
+            headerShown:false
         });
 
         if (trip) {
@@ -82,37 +82,40 @@ export default function TripDetails() {
     },[trip])
 
   return tripDetails&&(
-    <ScrollView>
-        {/* First try stored destination image, then fallback */}
-        {tripDetails?.imageRefs?.destination ? (
-            <Image 
-                source={{uri: tripDetails.imageRefs.destination.startsWith('places/') 
-                    ? `https://places.googleapis.com/v1/${tripDetails.imageRefs.destination}/media?maxWidthPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`
-                    : `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${tripDetails.imageRefs.destination}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`
-                }}
-                style={{
-                    width:'100%',
-                    height:330,
-                }}
-            />
-        ) : formatData(tripDetails?.tripData)?.locationInfo?.photoRef ? (
-             <Image source={{uri:
-            'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference='
-            +(formatData(tripDetails?.tripData)?.locationInfo?.photoRef || '')
-            +'&key='+process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}}
-            style={{
-                width:'100%',
-                height:330,
-            }}
-            />
-         ) : (
-             <Image source={{ uri: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=330&fit=crop&auto=format' }}
-                style={{
-                    width:'100%',
-                    height:330,
-                }}
-             />
-         )}
+    <View style={{ flex: 1 }}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={{ position: 'relative' }}>
+                {/* First try stored destination image, then fallback */}
+                {tripDetails?.imageRefs?.destination ? (
+                    <Image 
+                        source={{uri: tripDetails.imageRefs.destination.startsWith('places/') 
+                            ? `https://places.googleapis.com/v1/${tripDetails.imageRefs.destination}/media?maxWidthPx=400&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`
+                            : `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${tripDetails.imageRefs.destination}&key=${process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}`
+                        }}
+                        style={{
+                            width:'100%',
+                            height:330,
+                        }}
+                    />
+                ) : formatData(tripDetails?.tripData)?.locationInfo?.photoRef ? (
+                    <Image source={{uri:
+                        'https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference='
+                        +(formatData(tripDetails?.tripData)?.locationInfo?.photoRef || '')
+                        +'&key='+process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY}}
+                        style={{
+                            width:'100%',
+                            height:330,
+                        }}
+                    />
+                ) : (
+                    <Image source={{ uri: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=330&fit=crop&auto=format' }}
+                        style={{
+                            width:'100%',
+                            height:330,
+                        }}
+                    />
+                )}
+            </View>
         <View style={{
             padding:15,
             backgroundColor:Colors.WHITE,
@@ -198,6 +201,31 @@ export default function TripDetails() {
           tripId={tripDetails?.docId}
         />
         </View>
-    </ScrollView>
+        </ScrollView>
+        
+        {/* Floating Back Button */}
+        <TouchableOpacity 
+            onPress={() => router.push('/(tabs)/mytrip')}
+            style={{
+                position: 'absolute',
+                top: 50,
+                left: 20,
+                backgroundColor: 'rgba(0,0,0,0.6)',
+                padding: 10,
+                borderRadius: 25,
+                width: 45,
+                height: 45,
+                justifyContent: 'center',
+                alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
+                elevation: 5,
+            }}
+        >
+            <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+    </View>
   )
 }

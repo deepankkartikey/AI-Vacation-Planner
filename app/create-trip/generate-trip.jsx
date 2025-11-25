@@ -211,8 +211,13 @@ export default function GenerateTrip() {
             await setDoc(doc(db, "UserTrips", docId), skeletonDocument);
             console.log('✅ Skeleton saved to Firebase');
             
-            // Navigate to trip page immediately with skeleton
-            router.push('(tabs)/mytrip');
+            // Navigate directly to trip details page with the skeleton
+            router.push({
+                pathname: '/trip-details',
+                params: {
+                    trip: JSON.stringify(skeletonDocument)
+                }
+            });
             
             // PHASE 2: Enhance with details in background
             console.log('🎨 PHASE 2: Enhancing with details (background)...');
