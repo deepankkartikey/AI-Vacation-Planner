@@ -243,13 +243,43 @@ export default function Profile() {
 
   if (authError) {
     return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="person-circle-outline" size={80} color={Colors.GRAY} />
-        <Text style={styles.errorText}>Please sign in to view your profile</Text>
-        <Text style={styles.errorSubtext}>You need to be logged in to access profile settings</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => currentUser && loadProfile(currentUser.uid)}>
-          <Text style={styles.retryButtonText}>Retry</Text>
-        </TouchableOpacity>
+      <View style={styles.authRequiredContainer}>
+        <Ionicons name="person-circle-outline" size={100} color={Colors.PRIMARY} />
+        <Text style={styles.authTitle}>Welcome to Your Profile</Text>
+        <Text style={styles.authSubtext}>
+          Sign in to access your profile, manage your trips, and personalize your experience
+        </Text>
+        
+        <View style={styles.authButtonsContainer}>
+          <TouchableOpacity 
+            style={styles.signInButton} 
+            onPress={() => router.push('/auth/sign-in')}
+          >
+            <Text style={styles.signInButtonText}>Sign In</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.createAccountButton} 
+            onPress={() => router.push('/auth/sign-up')}
+          >
+            <Text style={styles.createAccountButtonText}>Create Account</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.authFeatures}>
+          <View style={styles.featureItem}>
+            <Ionicons name="checkmark-circle" size={24} color={Colors.PRIMARY} />
+            <Text style={styles.featureText}>Save and manage your trips</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Ionicons name="checkmark-circle" size={24} color={Colors.PRIMARY} />
+            <Text style={styles.featureText}>Personalized recommendations</Text>
+          </View>
+          <View style={styles.featureItem}>
+            <Ionicons name="checkmark-circle" size={24} color={Colors.PRIMARY} />
+            <Text style={styles.featureText}>Access from any device</Text>
+          </View>
+        </View>
       </View>
     )
   }
@@ -1045,5 +1075,78 @@ const styles = StyleSheet.create({
   },
   bottomPadding: {
     height: 100,
+  },
+  authRequiredContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.WHITE,
+    padding: 30,
+  },
+  authTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: Colors.PRIMARY,
+    marginTop: 20,
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  authSubtext: {
+    fontSize: 16,
+    color: Colors.GRAY,
+    textAlign: 'center',
+    marginBottom: 40,
+    lineHeight: 24,
+    paddingHorizontal: 10,
+  },
+  authButtonsContainer: {
+    width: '100%',
+    gap: 15,
+    marginBottom: 40,
+  },
+  signInButton: {
+    padding: 18,
+    backgroundColor: Colors.PRIMARY,
+    borderRadius: 15,
+    width: '100%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  signInButtonText: {
+    color: Colors.WHITE,
+    textAlign: 'center',
+    fontFamily: 'outfit-bold',
+    fontSize: 16,
+  },
+  createAccountButton: {
+    padding: 18,
+    backgroundColor: Colors.WHITE,
+    borderRadius: 15,
+    width: '100%',
+    borderWidth: 2,
+    borderColor: Colors.PRIMARY,
+  },
+  createAccountButtonText: {
+    color: Colors.PRIMARY,
+    textAlign: 'center',
+    fontFamily: 'outfit-bold',
+    fontSize: 16,
+  },
+  authFeatures: {
+    width: '100%',
+    gap: 15,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  featureText: {
+    fontSize: 16,
+    color: Colors.GRAY,
+    fontFamily: 'outfit',
   },
 })

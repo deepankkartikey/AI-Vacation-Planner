@@ -1,4 +1,4 @@
-import { View, Text, Image } from 'react-native'
+import { View, Text, Image, Alert } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import { Colors } from '../../constants/Colors'
 import { CreateTripContext } from '../../context/CreateTripContext'
@@ -32,6 +32,23 @@ export default function GenerateTrip() {
     ];
     
     useEffect(() => {
+        // Check authentication first
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            console.log('❌ User not authenticated - redirecting to sign in');
+            Alert.alert(
+                'Authentication Required',
+                'Please sign in to create a trip.',
+                [
+                    {
+                        text: 'Sign In',
+                        onPress: () => router.replace('/auth/sign-in')
+                    }
+                ]
+            );
+            return;
+        }
+        
         // Rotate loading messages every 3 seconds
         let messageIndex = 0;
         const messageInterval = setInterval(() => {
