@@ -61,13 +61,8 @@ export default function SearchPlace() {
     >
       <TouchableOpacity 
         onPress={() => {
-          // Check if there's a screen to go back to
-          if (router.canGoBack()) {
-            router.back();
-          } else {
-            // If no screen to go back to, navigate to mytrip tab
-            router.replace('/(tabs)/mytrip');
-          }
+          // Always navigate back to My Trips tab
+          router.push('/(tabs)/mytrip');
         }}
         style={{ marginBottom: 20 }}
       >
