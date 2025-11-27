@@ -48,7 +48,7 @@ const NewGooglePlacesSearch = ({
         sessionToken: sessionToken,
         languageCode: 'en',
         includedPrimaryTypes: ['locality', 'administrative_area_level_1', 'country'],
-        includedRegionCodes: ['US', 'CA', 'GB', 'FR', 'DE', 'IT', 'ES', 'AU', 'JP', 'CN', 'IN', 'BR'],
+        // Removed includedRegionCodes to allow worldwide search
       };
       
       console.log('📋 Autocomplete request:', { url, body: requestBody });
