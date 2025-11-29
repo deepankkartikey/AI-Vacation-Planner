@@ -73,6 +73,30 @@ export default function SharedTrip() {
         }
     }
 
+    const handleDownloadApp = (platform) => {
+        const deepLink = `aivacationplanner://trip-details?trip=${encodeURIComponent(JSON.stringify(tripDetails))}`
+        
+        if (Platform.OS === 'web') {
+            if (platform === 'ios') {
+                // Check if user has the app installed
+                window.location.href = deepLink
+                // Fallback to App Store after delay
+                setTimeout(() => {
+                    window.location.href = 'https://apps.apple.com/app/your-app-id' // Replace with your App Store link
+                }, 2000)
+            } else if (platform === 'android') {
+                // Check if user has the app installed
+                window.location.href = deepLink
+                // Fallback to Play Store after delay
+                setTimeout(() => {
+                    window.location.href = 'https://play.google.com/store/apps/details?id=com.anonymous.ai_travel_planner_app'
+                }, 2000)
+            }
+        } else {
+            Linking.openURL(deepLink)
+        }
+    }
+
     const formatData = (data) => {
         try {
             return data ? JSON.parse(data) : {}
@@ -151,6 +175,46 @@ export default function SharedTrip() {
 
             {/* Content */}
             <View style={{ padding: 20 }}>
+                {/* App Icon and Name */}
+                <View style={{ 
+                    alignItems: 'center', 
+                    marginBottom: 25,
+                    paddingBottom: 20,
+                    borderBottomWidth: 1,
+                    borderBottomColor: Colors.LIGHT_GRAY,
+                }}>
+                    <Image 
+                        source={require('../assets/images/icon.png')}
+                        style={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: 20,
+                            marginBottom: 12,
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.2,
+                            shadowRadius: 8,
+                            elevation: 5,
+                        }}
+                    />
+                    <Text style={{ 
+                        fontFamily: 'outfit-bold', 
+                        fontSize: 18, 
+                        color: Colors.PRIMARY,
+                        letterSpacing: 0.5,
+                    }}>
+                        AI Vacation Planner
+                    </Text>
+                    <Text style={{ 
+                        fontFamily: 'outfit', 
+                        fontSize: 13, 
+                        color: Colors.GRAY,
+                        marginTop: 4,
+                    }}>
+                        Plan smarter, travel better
+                    </Text>
+                </View>
+
                 <Text style={{ fontSize: 28, fontFamily: 'outfit-bold', color: Colors.BLACK }}>
                     {tripDetails?.tripPlan?.travelPlan?.location || 'Amazing Trip'}
                 </Text>
@@ -187,12 +251,12 @@ export default function SharedTrip() {
                     <Ionicons name="phone-portrait" size={50} color={Colors.PRIMARY} />
                     <Text style={{
                         marginTop: 15,
-                        fontSize: 20,
+                        fontSize: 22,
                         fontFamily: 'outfit-bold',
                         color: Colors.BLACK,
                         textAlign: 'center',
                     }}>
-                        Open in the App
+                        View Full Itinerary in App
                     </Text>
                     <Text style={{
                         marginTop: 10,
@@ -200,42 +264,79 @@ export default function SharedTrip() {
                         fontFamily: 'outfit',
                         color: Colors.GRAY,
                         textAlign: 'center',
+                        paddingHorizontal: 10,
                     }}>
-                        Get the full experience with interactive maps, real-time updates, and more!
+                        Get the complete experience with interactive maps, offline access, real-time updates, and personalized recommendations!
                     </Text>
 
-                    <TouchableOpacity
-                        onPress={handleOpenInApp}
-                        style={{
-                            marginTop: 20,
-                            backgroundColor: Colors.PRIMARY,
-                            paddingHorizontal: 40,
-                            paddingVertical: 15,
-                            borderRadius: 99,
-                            flexDirection: 'row',
-                            alignItems: 'center',
-                            gap: 10,
-                        }}
-                    >
-                        <Ionicons name="download" size={20} color={Colors.WHITE} />
+                    {/* App Store Buttons - Two Columns */}
+                    <View style={{ 
+                        width: '100%', 
+                        marginTop: 25, 
+                        flexDirection: 'row',
+                        gap: 15,
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                    }}>
+                        {/* iOS App Store Badge */}
+                        <TouchableOpacity
+                            onPress={() => handleDownloadApp('ios')}
+                            style={{
+                                flex: 1,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Image
+                                source={{ uri: 'https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg' }}
+                                style={{
+                                    width: '100%',
+                                    height: 50,
+                                    resizeMode: 'contain',
+                                }}
+                            />
+                        </TouchableOpacity>
+
+                        {/* Google Play Store Badge */}
+                        <TouchableOpacity
+                            onPress={() => handleDownloadApp('android')}
+                            style={{
+                                flex: 1,
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}
+                        >
+                            <Image
+                                source={{ uri: 'https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png' }}
+                                style={{
+                                    width: '100%',
+                                    height: 60,
+                                    resizeMode: 'contain',
+                                }}
+                            />
+                        </TouchableOpacity>
+                    </View>
+
+                    <View style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginTop: 20,
+                        paddingTop: 20,
+                        borderTopWidth: 1,
+                        borderTopColor: Colors.GRAY + '30',
+                        width: '100%',
+                    }}>
+                        <Ionicons name="checkmark-circle" size={16} color={Colors.PRIMARY} />
                         <Text style={{
-                            color: Colors.WHITE,
-                            fontFamily: 'outfit-bold',
-                            fontSize: 17,
+                            marginLeft: 6,
+                            fontSize: 13,
+                            fontFamily: 'outfit-medium',
+                            color: Colors.GRAY,
                         }}>
-                            Open App
+                            Free to download • No sign-up required
                         </Text>
-                    </TouchableOpacity>
-
-                    <Text style={{
-                        marginTop: 15,
-                        fontSize: 13,
-                        fontFamily: 'outfit',
-                        color: Colors.GRAY,
-                        textAlign: 'center',
-                    }}>
-                        Don't have the app? You'll be redirected to download it.
-                    </Text>
+                    </View>
                 </View>
 
                 {/* Trip Preview */}
@@ -246,36 +347,158 @@ export default function SharedTrip() {
 
                     {/* Hotels */}
                     {tripDetails?.tripPlan?.travelPlan?.hotels?.length > 0 && (
-                        <View style={{ marginBottom: 20 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                                <Ionicons name="bed" size={20} color={Colors.PRIMARY} />
-                                <Text style={{ marginLeft: 8, fontSize: 17, fontFamily: 'outfit-medium' }}>
+                        <View style={{ 
+                            marginBottom: 15,
+                            backgroundColor: Colors.WHITE,
+                            padding: 15,
+                            borderRadius: 15,
+                            borderWidth: 1,
+                            borderColor: Colors.LIGHT_GRAY,
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                <Ionicons name="bed" size={22} color={Colors.PRIMARY} />
+                                <Text style={{ marginLeft: 8, fontSize: 17, fontFamily: 'outfit-bold' }}>
                                     Accommodation
                                 </Text>
                             </View>
                             <Text style={{ fontFamily: 'outfit-bold', fontSize: 16, color: Colors.BLACK }}>
                                 {tripDetails.tripPlan.travelPlan.hotels[0]?.name || 'Hotel Recommended'}
                             </Text>
-                            <Text style={{ fontFamily: 'outfit', fontSize: 14, color: Colors.GRAY, marginTop: 2 }}>
+                            <Text style={{ fontFamily: 'outfit', fontSize: 14, color: Colors.GRAY, marginTop: 4 }}>
                                 {tripDetails.tripPlan.travelPlan.hotels[0]?.address || 'Prime location'}
                             </Text>
+                            {tripDetails.tripPlan.travelPlan.hotels[0]?.price && (
+                                <Text style={{ fontFamily: 'outfit-medium', fontSize: 15, color: Colors.PRIMARY, marginTop: 6 }}>
+                                    {tripDetails.tripPlan.travelPlan.hotels[0].price}
+                                </Text>
+                            )}
                         </View>
                     )}
 
                     {/* Days Count */}
                     {tripDetails?.tripPlan?.travelPlan?.itinerary && (
-                        <View style={{ marginBottom: 20 }}>
-                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
-                                <Ionicons name="map" size={20} color={Colors.PRIMARY} />
-                                <Text style={{ marginLeft: 8, fontSize: 17, fontFamily: 'outfit-medium' }}>
-                                    Itinerary
+                        <View style={{ 
+                            marginBottom: 15,
+                            backgroundColor: Colors.WHITE,
+                            padding: 15,
+                            borderRadius: 15,
+                            borderWidth: 1,
+                            borderColor: Colors.LIGHT_GRAY,
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                <Ionicons name="map" size={22} color={Colors.PRIMARY} />
+                                <Text style={{ marginLeft: 8, fontSize: 17, fontFamily: 'outfit-bold' }}>
+                                    Daily Itinerary
                                 </Text>
                             </View>
                             <Text style={{ fontFamily: 'outfit', fontSize: 15, color: Colors.GRAY }}>
-                                {Object.keys(tripDetails.tripPlan.travelPlan.itinerary).length} days of amazing activities and places to explore
+                                {Object.keys(tripDetails.tripPlan.travelPlan.itinerary).length} days packed with amazing activities and must-visit places
                             </Text>
                         </View>
                     )}
+
+                    {/* Budget */}
+                    {formatData(tripDetails?.tripData)?.budget && (
+                        <View style={{ 
+                            marginBottom: 15,
+                            backgroundColor: Colors.WHITE,
+                            padding: 15,
+                            borderRadius: 15,
+                            borderWidth: 1,
+                            borderColor: Colors.LIGHT_GRAY,
+                        }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                <Ionicons name="wallet" size={22} color={Colors.PRIMARY} />
+                                <Text style={{ marginLeft: 8, fontSize: 17, fontFamily: 'outfit-bold' }}>
+                                    Budget
+                                </Text>
+                            </View>
+                            <Text style={{ fontFamily: 'outfit', fontSize: 15, color: Colors.GRAY }}>
+                                {formatData(tripDetails.tripData).budget?.title || 'Budget-friendly options'}
+                            </Text>
+                        </View>
+                    )}
+                </View>
+
+                {/* App Features */}
+                <View style={{ marginTop: 40 }}>
+                    <Text style={{ fontSize: 20, fontFamily: 'outfit-bold', color: Colors.BLACK, marginBottom: 20, textAlign: 'center' }}>
+                        Why Download Our App?
+                    </Text>
+                    
+                    <View style={{ gap: 15 }}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+                            <View style={{ 
+                                backgroundColor: Colors.PRIMARY + '15',
+                                padding: 12,
+                                borderRadius: 12,
+                            }}>
+                                <Ionicons name="map-outline" size={24} color={Colors.PRIMARY} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontFamily: 'outfit-bold', fontSize: 16, color: Colors.BLACK }}>
+                                    Interactive Maps
+                                </Text>
+                                <Text style={{ fontFamily: 'outfit', fontSize: 14, color: Colors.GRAY, marginTop: 2 }}>
+                                    Navigate with ease using built-in maps
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+                            <View style={{ 
+                                backgroundColor: Colors.PRIMARY + '15',
+                                padding: 12,
+                                borderRadius: 12,
+                            }}>
+                                <Ionicons name="cloud-offline-outline" size={24} color={Colors.PRIMARY} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontFamily: 'outfit-bold', fontSize: 16, color: Colors.BLACK }}>
+                                    Offline Access
+                                </Text>
+                                <Text style={{ fontFamily: 'outfit', fontSize: 14, color: Colors.GRAY, marginTop: 2 }}>
+                                    Access your itinerary without internet
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+                            <View style={{ 
+                                backgroundColor: Colors.PRIMARY + '15',
+                                padding: 12,
+                                borderRadius: 12,
+                            }}>
+                                <Ionicons name="sparkles-outline" size={24} color={Colors.PRIMARY} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontFamily: 'outfit-bold', fontSize: 16, color: Colors.BLACK }}>
+                                    AI-Powered Planning
+                                </Text>
+                                <Text style={{ fontFamily: 'outfit', fontSize: 14, color: Colors.GRAY, marginTop: 2 }}>
+                                    Get personalized recommendations
+                                </Text>
+                            </View>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 15 }}>
+                            <View style={{ 
+                                backgroundColor: Colors.PRIMARY + '15',
+                                padding: 12,
+                                borderRadius: 12,
+                            }}>
+                                <Ionicons name="share-social-outline" size={24} color={Colors.PRIMARY} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{ fontFamily: 'outfit-bold', fontSize: 16, color: Colors.BLACK }}>
+                                    Easy Sharing
+                                </Text>
+                                <Text style={{ fontFamily: 'outfit', fontSize: 14, color: Colors.GRAY, marginTop: 2 }}>
+                                    Share trips with friends and family
+                                </Text>
+                            </View>
+                        </View>
+                    </View>
                 </View>
 
                 {/* Footer */}
