@@ -15,7 +15,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.ai-travel-planner-app",
-      "associatedDomains": ["applinks:ai-vacation-planner-f40c0.web.app"]
+      "associatedDomains": ["applinks:ai-vacation-planner-f40c0.web.app"],
+      "icon": "./assets/images/icon.png",
+      "backgroundColor": "#ffffff"
     },
     "android": {
       "adaptiveIcon": {
