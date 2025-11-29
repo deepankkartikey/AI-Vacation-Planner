@@ -1,4 +1,4 @@
-import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native'
+import { View, Text, Image, ScrollView, ActivityIndicator, TouchableOpacity, Share, Alert, Platform, Modal, Clipboard } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
@@ -17,6 +17,67 @@ export default function TripDetails() {
     const {trip}=useLocalSearchParams();
     const [tripDetails,setTripDetails]=useState(null);
     const [isEnhancing, setIsEnhancing] = useState(false);
+    const [showShareModal, setShowShareModal] = useState(false);
+
+    const getShareUrl = () => {
+        if (!tripDetails?.docId) return '';
+        return `https://ai-vacation-planner-f40c0.web.app/trip?id=${tripDetails.docId}`;
+    };
+
+    const handleCopyLink = async () => {
+        const shareUrl = getShareUrl();
+        if (!shareUrl) {
+            Alert.alert('Error', 'Cannot create share link. Trip ID is missing.');
+            return;
+        }
+
+        try {
+            if (Platform.OS === 'web') {
+                await navigator.clipboard.writeText(shareUrl);
+            } else {
+                await Clipboard.setString(shareUrl);
+            }
+            setShowShareModal(false);
+            Alert.alert('Success', 'Link copied to clipboard!');
+        } catch (error) {
+            console.error('Error copying link:', error);
+            Alert.alert('Error', 'Failed to copy link. Please try again.');
+        }
+    };
+
+    const handleShareVia = async () => {
+        const shareUrl = getShareUrl();
+        if (!shareUrl) {
+            Alert.alert('Error', 'Cannot share this trip. Trip ID is missing.');
+            return;
+        }
+
+        const message = `Check out my ${tripDetails?.tripPlan?.travelPlan?.location || 'vacation'} trip itinerary!`;
+
+        try {
+            const result = await Share.share({
+                message: Platform.OS === 'ios' ? message : `${message}\n\n${shareUrl}`,
+                url: Platform.OS === 'ios' ? shareUrl : undefined,
+                title: 'Share Trip Itinerary',
+            });
+
+            if (result.action === Share.sharedAction) {
+                setShowShareModal(false);
+                console.log('Trip shared successfully');
+            }
+        } catch (error) {
+            console.error('Error sharing trip:', error);
+            Alert.alert('Error', 'Failed to share trip. Please try again.');
+        }
+    };
+
+    const handleShareTrip = () => {
+        if (!tripDetails?.docId) {
+            Alert.alert('Error', 'Cannot share this trip. Trip ID is missing.');
+            return;
+        }
+        setShowShareModal(true);
+    };
 
     const formatData=(data)=>{
         try {
@@ -211,29 +272,212 @@ export default function TripDetails() {
         </View>
         </ScrollView>
         
-        {/* Floating Back Button */}
-        <TouchableOpacity 
-            onPress={() => router.push('/(tabs)/mytrip')}
-            style={{
-                position: 'absolute',
-                top: 50,
-                left: 20,
-                backgroundColor: 'rgba(0,0,0,0.6)',
-                padding: 10,
-                borderRadius: 25,
-                width: 45,
-                height: 45,
-                justifyContent: 'center',
-                alignItems: 'center',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.3,
-                shadowRadius: 4,
-                elevation: 5,
-            }}
+        {/* Floating Action Buttons */}
+        <View style={{
+            position: 'absolute',
+            top: 50,
+            left: 20,
+            right: 20,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+        }}>
+            {/* Back Button */}
+            <TouchableOpacity 
+                onPress={() => router.push('/(tabs)/mytrip')}
+                style={{
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    padding: 10,
+                    borderRadius: 25,
+                    width: 45,
+                    height: 45,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                }}
+            >
+                <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+
+            {/* Share Button */}
+            <TouchableOpacity 
+                onPress={handleShareTrip}
+                style={{
+                    backgroundColor: Colors.PRIMARY,
+                    padding: 10,
+                    borderRadius: 25,
+                    width: 45,
+                    height: 45,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.3,
+                    shadowRadius: 4,
+                    elevation: 5,
+                }}
+            >
+                <Ionicons name="share-social" size={22} color="white" />
+            </TouchableOpacity>
+        </View>
+
+        {/* Share Modal */}
+        <Modal
+            visible={showShareModal}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowShareModal(false)}
         >
-            <Ionicons name="arrow-back" size={24} color="white" />
-        </TouchableOpacity>
+            <TouchableOpacity 
+                style={{
+                    flex: 1,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    justifyContent: 'flex-end',
+                }}
+                activeOpacity={1}
+                onPress={() => setShowShareModal(false)}
+            >
+                <View 
+                    style={{
+                        backgroundColor: Colors.WHITE,
+                        borderTopLeftRadius: 20,
+                        borderTopRightRadius: 20,
+                        paddingBottom: 30,
+                    }}
+                    onStartShouldSetResponder={() => true}
+                >
+                    {/* Modal Header */}
+                    <View style={{
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: 20,
+                        borderBottomWidth: 1,
+                        borderBottomColor: Colors.LIGHT_GRAY,
+                    }}>
+                        <Text style={{
+                            fontSize: 20,
+                            fontFamily: 'outfit-bold',
+                            color: Colors.BLACK,
+                        }}>Share Trip</Text>
+                        <TouchableOpacity onPress={() => setShowShareModal(false)}>
+                            <Ionicons name="close" size={28} color={Colors.GRAY} />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Share Options */}
+                    <View style={{ padding: 20, gap: 15 }}>
+                        {/* Copy Link Option */}
+                        <TouchableOpacity
+                            onPress={handleCopyLink}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                padding: 15,
+                                backgroundColor: Colors.LIGHT_GRAY,
+                                borderRadius: 15,
+                                gap: 15,
+                            }}
+                        >
+                            <View style={{
+                                width: 45,
+                                height: 45,
+                                borderRadius: 25,
+                                backgroundColor: Colors.PRIMARY + '20',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}>
+                                <Ionicons name="copy-outline" size={24} color={Colors.PRIMARY} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{
+                                    fontSize: 17,
+                                    fontFamily: 'outfit-medium',
+                                    color: Colors.BLACK,
+                                }}>Copy Link</Text>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontFamily: 'outfit',
+                                    color: Colors.GRAY,
+                                    marginTop: 2,
+                                }}>Share via clipboard</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color={Colors.GRAY} />
+                        </TouchableOpacity>
+
+                        {/* Share Via Option */}
+                        <TouchableOpacity
+                            onPress={handleShareVia}
+                            style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                padding: 15,
+                                backgroundColor: Colors.LIGHT_GRAY,
+                                borderRadius: 15,
+                                gap: 15,
+                            }}
+                        >
+                            <View style={{
+                                width: 45,
+                                height: 45,
+                                borderRadius: 25,
+                                backgroundColor: Colors.PRIMARY + '20',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                            }}>
+                                <Ionicons name="share-social-outline" size={24} color={Colors.PRIMARY} />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={{
+                                    fontSize: 17,
+                                    fontFamily: 'outfit-medium',
+                                    color: Colors.BLACK,
+                                }}>Share Via</Text>
+                                <Text style={{
+                                    fontSize: 14,
+                                    fontFamily: 'outfit',
+                                    color: Colors.GRAY,
+                                    marginTop: 2,
+                                }}>WhatsApp, Messages, Email...</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color={Colors.GRAY} />
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Share URL Preview */}
+                    <View style={{
+                        marginHorizontal: 20,
+                        padding: 15,
+                        backgroundColor: Colors.LIGHT_GRAY + '80',
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: Colors.LIGHT_GRAY,
+                    }}>
+                        <Text style={{
+                            fontSize: 12,
+                            fontFamily: 'outfit',
+                            color: Colors.GRAY,
+                            marginBottom: 5,
+                        }}>Share Link:</Text>
+                        <Text 
+                            style={{
+                                fontSize: 13,
+                                fontFamily: 'outfit-medium',
+                                color: Colors.PRIMARY,
+                            }}
+                            numberOfLines={1}
+                            ellipsizeMode="middle"
+                        >
+                            {getShareUrl()}
+                        </Text>
+                    </View>
+                </View>
+            </TouchableOpacity>
+        </Modal>
     </View>
   )
 }
