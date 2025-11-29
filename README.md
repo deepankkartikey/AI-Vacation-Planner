@@ -219,6 +219,20 @@ If you encounter issues:
 - Use `console.log(process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY)` to debug
 - Ensure `.env` file is in the root directory (same level as `package.json`)
 
+## Firebase Hosting
+
+The app is deployed and accessible at:
+**🌐 [https://ai-vacation-planner-f40c0.web.app](https://ai-vacation-planner-f40c0.web.app)**
+
+### Deploy Updates
+```bash
+# Export web build
+npx expo export --platform web
+
+# Deploy to Firebase
+firebase deploy --only hosting
+```
+
 ## Disclaimer
 
 For now, the API keys (Google Places, Google Gemini, and Firebase) are available in the repository so that the project can be run smoothly for viewing purposes. These keys will be removed soon, so please note that future commits may require you to provide your own API keys.
