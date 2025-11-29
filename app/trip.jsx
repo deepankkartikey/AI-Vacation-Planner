@@ -183,25 +183,36 @@ export default function SharedTrip() {
                     borderBottomWidth: 1,
                     borderBottomColor: Colors.LIGHT_GRAY,
                 }}>
-                    <Image 
-                        source={require('../assets/images/icon.png')}
-                        style={{
-                            width: 80,
-                            height: 80,
-                            borderRadius: 20,
-                            marginBottom: 12,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.2,
-                            shadowRadius: 8,
-                            elevation: 5,
-                        }}
-                    />
+                    <View style={{
+                        width: 90,
+                        height: 90,
+                        borderRadius: 22,
+                        backgroundColor: Colors.WHITE,
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        shadowColor: '#000',
+                        shadowOffset: { width: 0, height: 4 },
+                        shadowOpacity: 0.15,
+                        shadowRadius: 10,
+                        elevation: 8,
+                        padding: 5,
+                    }}>
+                        <Image 
+                            source={require('../assets/images/icon.png')}
+                            style={{
+                                width: 80,
+                                height: 80,
+                                borderRadius: 18,
+                            }}
+                            resizeMode="cover"
+                        />
+                    </View>
                     <Text style={{ 
                         fontFamily: 'outfit-bold', 
                         fontSize: 18, 
                         color: Colors.PRIMARY,
                         letterSpacing: 0.5,
+                        marginTop: 12,
                     }}>
                         AI Vacation Planner
                     </Text>
