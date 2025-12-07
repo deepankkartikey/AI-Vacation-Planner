@@ -1,16 +1,16 @@
 import { View, Text, TouchableOpacity, Platform, Alert, ScrollView } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigation, useRouter } from 'expo-router'
 import { SelectBudgetOptions } from '../../constants/Options';
 import { Colors } from '../../constants/Colors';
-import { CreateTripContext } from '../../context/CreateTripContext';
+import { useCreateTrip } from '../../context/CreateTripContext';
 import Slider from '@react-native-community/slider';
 export default function SelectBudget() {
   
     const navigation=useNavigation();
     const [selectedOption,setSelectedOption]=useState();
     const [dailyBudget, setDailyBudget] = useState(150); // Default to $150/day
-    const {tripData,setTripData}=useContext(CreateTripContext);
+    const {tripData,setTripData}=useCreateTrip();
     const router=useRouter();
     
     useEffect(()=>{

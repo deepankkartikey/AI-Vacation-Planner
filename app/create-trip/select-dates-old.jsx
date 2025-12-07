@@ -1,16 +1,16 @@
 import { View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
 import CalendarPicker from "react-native-calendar-picker";
 import moment from 'moment';
-import { CreateTripContext } from '../../context/CreateTripContext';
+import { useCreateTrip } from '../../context/CreateTripContext';
 export default function SelectDates() {
  
     const navigation=useNavigation();
     const [startDate,setStartDate]=useState();
     const [endDate,setEndDate]=useState();
-  const {tripData,setTripData}=useContext(CreateTripContext);
+  const {tripData,setTripData}=useCreateTrip();
   const router=useRouter();
     useEffect(()=>{
         navigation.setOptions({

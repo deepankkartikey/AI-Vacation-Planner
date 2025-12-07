@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity, Alert } from 'react-native'
-import React, { useContext, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
-import {CreateTripContext} from './../../context/CreateTripContext'
+import { useCreateTrip } from './../../context/CreateTripContext'
 import NewGooglePlacesSearch from '../../components/CreateTrip/NewGooglePlacesSearch';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../../firebase/config';
@@ -10,7 +10,7 @@ import { auth } from '../../firebase/config';
 export default function SearchPlace() {
 
   const navigation=useNavigation();
-  const {tripData,setTripData}=useContext(CreateTripContext);
+  const {tripData,setTripData}=useCreateTrip();
   const router=useRouter();
   
   useEffect(()=>{

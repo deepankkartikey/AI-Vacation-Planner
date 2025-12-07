@@ -1,15 +1,15 @@
 import { View, Text, ScrollView, TouchableOpacity, ToastAndroid, Platform, Alert } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
-import { CreateTripContext } from '../../context/CreateTripContext';
+import { useCreateTrip } from '../../context/CreateTripContext';
 
 export default function SelectActivities() {
   
     const navigation = useNavigation();
     const [selectedActivities, setSelectedActivities] = useState([]);
     const [activityCostPreference, setActivityCostPreference] = useState('');
-    const { tripData, setTripData } = useContext(CreateTripContext);
+    const { tripData, setTripData } = useCreateTrip();
     const router = useRouter();
 
     // Activity options

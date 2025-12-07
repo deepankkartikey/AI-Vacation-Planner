@@ -1,15 +1,15 @@
 import { View, Text, FlatList, TouchableOpacity } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link, useNavigation } from 'expo-router'
 import {Colors } from './../../constants/Colors'
 import {SelectTravelesList} from './../../constants/Options'
 import OptionCard from '../../components/CreateTrip/OptionCard'
-import { CreateTripContext } from '../../context/CreateTripContext'
+import { useCreateTrip } from '../../context/CreateTripContext'
 export default function SelectTraveler() {
  
   const navigation=useNavigation();
   const [selectedTraveler,setSelectedTraveler]=useState();
-  const {tripData,setTripData}=useContext(CreateTripContext);
+  const {tripData,setTripData}=useCreateTrip();
 
 
   useEffect(()=>{

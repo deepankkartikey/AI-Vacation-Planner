@@ -1,7 +1,7 @@
 import { View, Text, Image, Alert } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Colors } from '../../constants/Colors'
-import { CreateTripContext } from '../../context/CreateTripContext'
+import { useCreateTrip } from '../../context/CreateTripContext'
 import { AI_SKELETON_PROMPT, AI_DETAIL_PROMPT } from '../../constants/Options';
 import { useRouter } from 'expo-router';
 import { doc, setDoc } from 'firebase/firestore';
@@ -11,7 +11,7 @@ import ProfileService from '../../services/ProfileService'
 import GeminiService from '../../services/GeminiService'
 
 export default function GenerateTrip() {
-    const { tripData, setTripData } = useContext(CreateTripContext);
+    const { tripData, setTripData } = useCreateTrip();
     const [loading, setLoading] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('Finding places for you...');
     const [generationPhase, setGenerationPhase] = useState('skeleton'); // 'skeleton' or 'details'

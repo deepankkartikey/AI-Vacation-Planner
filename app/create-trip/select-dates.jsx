@@ -1,10 +1,10 @@
 import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useNavigation, useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors';
 import { Calendar } from 'react-native-calendars';
 import moment from 'moment';
-import { CreateTripContext } from '../../context/CreateTripContext';
+import { useCreateTrip } from '../../context/CreateTripContext';
 
 export default function SelectDates() {
  
@@ -12,7 +12,7 @@ export default function SelectDates() {
     const [startDate, setStartDate] = useState();
     const [endDate, setEndDate] = useState();
     const [markedDates, setMarkedDates] = useState({});
-    const { tripData, setTripData } = useContext(CreateTripContext);
+    const { tripData, setTripData } = useCreateTrip();
     const router = useRouter();
 
     useEffect(() => {
