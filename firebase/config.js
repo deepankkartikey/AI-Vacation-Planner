@@ -24,27 +24,33 @@ const firebaseConfig = {
   measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Fallback configuration if environment variables are not loaded
-const fallbackConfig = {
-  apiKey: "REMOVED_FROM_HISTORY",
-  authDomain: "REMOVED_FROM_HISTORY",
-  projectId: "ai-vacation-planner-f40c0",
-  storageBucket: "REMOVED_FROM_HISTORY",
-  messagingSenderId: "REMOVED_FROM_HISTORY",
-  appId: "1:REMOVED_FROM_HISTORY:web:5df69ac381e2dd628c121f",
-  measurementId: "REMOVED_FROM_HISTORY"
-};
+// Validate that all required environment variables are present
+const requiredEnvVars = [
+  'EXPO_PUBLIC_FIREBASE_API_KEY',
+  'EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN',
+  'EXPO_PUBLIC_FIREBASE_PROJECT_ID',
+  'EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET',
+  'EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+  'EXPO_PUBLIC_FIREBASE_APP_ID'
+];
 
-// Use environment config if available, otherwise fallback
-const finalConfig = firebaseConfig.apiKey ? firebaseConfig : fallbackConfig;
+const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingVars.length > 0) {
+  console.error('❌ Missing required Firebase environment variables:', missingVars);
+  throw new Error(
+    `Firebase configuration error: Missing environment variables: ${missingVars.join(', ')}. ` +
+    'Please check your .env file and ensure all EXPO_PUBLIC_FIREBASE_* variables are set.'
+  );
+}
 
 // Debug logging (only in development)
 if (__DEV__) {
-  console.log('� Firebase Debug:', {
-    hasApiKey: !!finalConfig.apiKey,
-    hasProjectId: !!finalConfig.projectId,
-    hasAppId: !!finalConfig.appId,
-    usingFallback: !firebaseConfig.apiKey
+  console.log('🔥 Firebase Debug:', {
+    hasApiKey: !!firebaseConfig.apiKey,
+    hasProjectId: !!firebaseConfig.projectId,
+    hasAppId: !!firebaseConfig.appId,
+    allConfigured: missingVars.length === 0
   });
 }
 
@@ -52,7 +58,7 @@ if (__DEV__) {
 let app;
 if (getApps().length === 0) {
   try {
-    app = initializeApp(finalConfig);
+    app = initializeApp(firebaseConfig);
     if (__DEV__) {
       console.log('✅ Firebase app initialized successfully');
     }
