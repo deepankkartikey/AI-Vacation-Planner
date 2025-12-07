@@ -10,7 +10,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // Suppress specific warnings from third-party libraries
 LogBox.ignoreLogs([
   'Warning: Day: Support for defaultProps will be removed',
-  'Warning: CalendarPicker: Support for defaultProps will be removed',
   'Warning: DaysGridView: Support for defaultProps will be removed',
 ]);
 
