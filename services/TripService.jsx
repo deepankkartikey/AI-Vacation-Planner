@@ -1,5 +1,5 @@
 import { doc, deleteDoc, setDoc, getDoc } from 'firebase/firestore';
-import { db, auth } from '../configs/FirebaseConfig';
+import { db, auth } from '../firebase/config';
 import ProfileService from './ProfileService';
 
 export const deleteTrip = async (tripId) => {

@@ -5,7 +5,7 @@ import { Colors } from '../../constants/Colors';
 import {CreateTripContext} from './../../context/CreateTripContext'
 import NewGooglePlacesSearch from '../../components/CreateTrip/NewGooglePlacesSearch';
 import { Ionicons } from '@expo/vector-icons';
-import { auth } from '../../configs/FirebaseConfig';
+import { auth } from '../../firebase/config';
 
 export default function SearchPlace() {
 

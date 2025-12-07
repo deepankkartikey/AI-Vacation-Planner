@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
-import { db, storage } from '../configs/FirebaseConfig';
+import { db, storage } from '../firebase/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getUserLocation } from './LocationService';
 

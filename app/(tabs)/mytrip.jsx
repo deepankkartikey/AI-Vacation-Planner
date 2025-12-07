@@ -4,7 +4,7 @@ import {Colors} from './../../constants/Colors'
 import { Ionicons } from '@expo/vector-icons';
 import StartNewTripCard from '../../components/MyTrips/StartNewTripCard';
 import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
-import {auth, db} from './../../configs/FirebaseConfig'
+import {auth, db} from './../../firebase/config'
 import UserTripList from '../../components/MyTrips/UserTripList';
 import { useRouter } from 'expo-router';
 import { restoreTrip } from '../../services/TripService';

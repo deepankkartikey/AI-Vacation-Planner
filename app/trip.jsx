@@ -2,7 +2,7 @@ import { View, Text, ActivityIndicator, ScrollView, Image, TouchableOpacity, Pla
 import React, { useEffect, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { doc, getDoc } from 'firebase/firestore'
-import { db } from '../configs/FirebaseConfig'
+import { db } from '../firebase/config'
 import { Colors } from '../constants/Colors'
 import { Ionicons } from '@expo/vector-icons'
 import moment from 'moment'

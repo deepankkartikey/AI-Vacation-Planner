@@ -26,13 +26,13 @@ const firebaseConfig = {
 
 // Fallback configuration if environment variables are not loaded
 const fallbackConfig = {
-  apiKey: "AIzaSyCScbi6yBHawnFCUNlwDJS5CfsUiNFzl3s",
-  authDomain: "ai-vacation-planner-f40c0.firebaseapp.com",
+  apiKey: "REMOVED_FROM_HISTORY",
+  authDomain: "REMOVED_FROM_HISTORY",
   projectId: "ai-vacation-planner-f40c0",
-  storageBucket: "ai-vacation-planner-f40c0.firebasestorage.app",
-  messagingSenderId: "352522558798",
-  appId: "1:352522558798:web:5df69ac381e2dd628c121f",
-  measurementId: "G-E29PXHL6NL"
+  storageBucket: "REMOVED_FROM_HISTORY",
+  messagingSenderId: "REMOVED_FROM_HISTORY",
+  appId: "1:REMOVED_FROM_HISTORY:web:5df69ac381e2dd628c121f",
+  measurementId: "REMOVED_FROM_HISTORY"
 };
 
 // Use environment config if available, otherwise fallback

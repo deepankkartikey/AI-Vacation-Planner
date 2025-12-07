@@ -147,17 +147,20 @@ Starts the web development server with the latest Expo CLI, clears cache, and en
 
 #### **📱 Platform-Specific Commands**
 ```bash
-npm run dev-native     # Start native development server (iOS/Android)
-npm run ios            # Start and open iOS simulator with cache clearing
-npm run android        # Start and open Android emulator with cache clearing
-npm run web            # Start web development server with cache clearing
-npm start              # Original start command
+npm run dev-native       # Start native development server (iOS/Android)
+npm run dev-optimized    # Optimized dev server with file descriptor handling (macOS)
+npm run ios              # Start and open iOS simulator with cache clearing
+npm run android          # Start and open Android emulator with cache clearing
+npm run web              # Start web development server with cache clearing
+npm start                # Original start command
 ```
 
 #### **🛠️ Utility Commands**
 ```bash
 npm run install-clean    # Clean install dependencies
 npm run reset-project    # Reset project to initial state
+npm run fix-calendar     # Fix calendar picker issues
+npm run test-gemini      # Test Gemini API configuration
 npm test                 # Run tests with Jest
 npm run lint             # Run ESLint code checking
 ```

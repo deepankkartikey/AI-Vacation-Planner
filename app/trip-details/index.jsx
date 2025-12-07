@@ -7,7 +7,7 @@ import FlightInfo from '../../components/TripDetails/FlightInfo';
 import HotelList from '../../components/TripDetails/HotelList';
 import PlannedTrip from '../../components/TripDetails/PlannedTrip';
 import { doc, onSnapshot } from 'firebase/firestore';
-import { db } from '../../configs/FirebaseConfig';
+import { db } from '../../firebase/config';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function TripDetails() {

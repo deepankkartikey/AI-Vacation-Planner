@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Alert, ActivityIndicator, Switch, StyleSheet } from 'react-native'
 import React, { useState, useEffect } from 'react'
 import { Colors } from '../../constants/Colors'
-import { auth } from '../../configs/FirebaseConfig'
+import { auth } from '../../firebase/config'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import ProfileService from '../../services/ProfileService'
 import * as ImagePicker from 'expo-image-picker'

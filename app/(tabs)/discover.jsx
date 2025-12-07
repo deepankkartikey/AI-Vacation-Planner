@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react'
 import { useRouter } from 'expo-router'
 import { Colors } from '../../constants/Colors'
 import { Ionicons } from '@expo/vector-icons'
-import { auth } from '../../configs/FirebaseConfig'
+import { auth } from '../../firebase/config'
 
 export default function Discover() {
   const router = useRouter();

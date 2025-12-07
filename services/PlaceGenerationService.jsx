@@ -1,5 +1,5 @@
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { db } from '../configs/FirebaseConfig';
+import { db } from '../firebase/config';
 import { GetPhotoRef } from './GooglePlaceApi';
 
 export const generateMorePlaces = async (tripId, location, filterType, filterLabel, tripData) => {
